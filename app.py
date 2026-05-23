@@ -58,8 +58,8 @@ if captured_image is not None:
     resized_img = cv2.resize(img_array, (224, 224)) / 255.0
     input_batch = np.expand_dims(resized_img, axis=0)
     
-        # Run prediction
-    predictions = model.predict(input_batch, verbose=0)[0]  # <-- ADDED [0] HERE
+    # Run prediction
+    predictions = model.predict(input_batch, verbose=0)
     
     highest_score_index = np.argmax(predictions)
     detected_shape = LABELS[highest_score_index]
@@ -89,36 +89,65 @@ if captured_image is not None:
     if recommendation_path is not None:
         recommendation_graphic = Image.open(recommendation_path)
         st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {detected_shape.upper()} faces")
-         # --- ADDED: STYLING TIPS TO AVOID MATRIX ---
-        st.write("---")
-        st.write("### ⚠️ Hairstyles to Avoid for Your Face Shape")
         
+        # --- DYNAMIC STYLING TIPS MATRIX BASED ON GENDER ---
+        st.write("---")
+        st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
+        
+        # Base rules applicable to all genders
         avoidance_tips = {
             'oval': [
-                "**Avoid heavy, long straight bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
-                "**Avoid hairstyles that add excessive height or volume** directly on the top without any width, which can make your face appear artificially long."
+                "**Avoid heavy, long straight blunt bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
+                "**Avoid hairstyles that add excessive height or volume** directly on the top without any width, which can stretch your facial features and make your face appear artificially long."
             ],
             'round': [
-                "**Avoid sleek, chin-length bobs with flat surfaces** that hug your face line, as they act like a border highlighting the roundness of your cheeks.",
-                "**Avoid slicked-back styles or middle parts with no volume**, which can compress your forehead proportions and make the face shape look even wider."
+                "**Avoid sleek, flat surfaces** that hug your face line, as they act like a border highlighting the roundness of your cheeks.",
+                "**Avoid slicked-back styles or middle parts with zero top volume**, which compress your forehead proportions and make the face shape look even wider."
             ],
             'heart': [
-                "**Avoid heavy top volume or slick back styles with high pompadours**, as they add bulk to an already wide forehead line and accent a narrow chin.",
-                "**Avoid short, blunt-cut wispy bangs** or styles that end harshly right at your cheekbone levels, which can visually expand the upper half of your face."
+                "**Avoid heavy top volume or high pompadours**, as they add bulk to an already wide forehead line and accent a narrow chin.",
+                "**Avoid short, blunt-cut wispy bangs** or styles that end harshly right at your cheekbone levels, which visually expand the upper half of your face."
             ],
             'square': [
-                "**Avoid sharp, blunt-cut straight fringes or geometric box haircuts**, as these parallel lines emphasize harsh jawline edges and make your face look boxy.",
-                "**Avoid slicked-back ponytails, tightly pulled updos, or center parts with completely flat sides** that offer zero soft layers around the sides of your face."
+                "**Avoid sharp, blunt-cut straight fringes or geometric box layouts**, as these parallel lines emphasize harsh jawline edges and make your face look boxy.",
+                "**Avoid slicked-back look variations or center parts with completely flat sides** that offer zero soft volume around the sides of your face."
             ]
         }
         
+        # Gender-specific haircut lists to avoid
+        specific_cuts_to_avoid = {
+            'oval': {
+                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** High and tight mohawks, extremely high pomp-fades with bald-shaved sides, or flat micro-fringes.",
+                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Severe slicked-back high ponytails with zero face-framing layers, or bone-straight micro-bangs."
+            },
+            'round': {
+                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Flat, slicked-back side-parts, buzz cuts with zero top texture, or heavy bowl cuts.",
+                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** The classic blunt chin-length bob, flat pixie cuts with zero top texture, or sleek pageboy styles."
+            },
+            'heart': {
+                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Slicked-back undercut fades, wide straight-across block bangs, or high top-knots.",
+                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Short geometric pixie cuts with severe bangs, or harsh chin-length blunt cuts."
+            },
+            'square': {
+                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Geometric flat tops, severe slicked-back buzz cuts with hard lines, or wide square block-fades.",
+                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Sharp blunt flapper bobs, severe slicked-back buns, or straight-across heavy blunt fringes."
+            }
+        }
+        
+        # Display the formatted tips inside a clean container box
         if shape_folder in avoidance_tips:
             with st.container(border=True):
-                st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles:")
+                st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles ({gender.upper()}):")
+                
+                # Print the general rule bullet points first
                 for tip in avoidance_tips[shape_folder]:
                     st.write(f"- {tip}")
+                
+                # Fetch the exact gender-specific haircut list
+                gender_key = gender_file  # 'men' or 'women'
+                if shape_folder in specific_cuts_to_avoid and gender_key in specific_cuts_to_avoid[shape_folder]:
+                    st.write("- " + specific_cuts_to_avoid[shape_folder][gender_key])
+                    
     else:
         # If none of the extension styles were found, display an informative error log
         st.error(f"❌ Asset file missing inside folder structure! Searched for '{gender_file}' variations inside 'hairstyle_dataset/{shape_folder}/'")
-
-     
