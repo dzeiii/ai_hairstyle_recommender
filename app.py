@@ -89,41 +89,36 @@ if captured_image is not None:
     if recommendation_path is not None:
         recommendation_graphic = Image.open(recommendation_path)
         st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {detected_shape.upper()} faces")
+         # --- ADDED: STYLING TIPS TO AVOID MATRIX ---
+        st.write("---")
+        st.write("### ⚠️ Hairstyles to Avoid for Your Face Shape")
+        
+        avoidance_tips = {
+            'oval': [
+                "**Avoid heavy, long straight bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
+                "**Avoid hairstyles that add excessive height or volume** directly on the top without any width, which can make your face appear artificially long."
+            ],
+            'round': [
+                "**Avoid sleek, chin-length bobs with flat surfaces** that hug your face line, as they act like a border highlighting the roundness of your cheeks.",
+                "**Avoid slicked-back styles or middle parts with no volume**, which can compress your forehead proportions and make the face shape look even wider."
+            ],
+            'heart': [
+                "**Avoid heavy top volume or slick back styles with high pompadours**, as they add bulk to an already wide forehead line and accent a narrow chin.",
+                "**Avoid short, blunt-cut wispy bangs** or styles that end harshly right at your cheekbone levels, which can visually expand the upper half of your face."
+            ],
+            'square': [
+                "**Avoid sharp, blunt-cut straight fringes or geometric box haircuts**, as these parallel lines emphasize harsh jawline edges and make your face look boxy.",
+                "**Avoid slicked-back ponytails, tightly pulled updos, or center parts with completely flat sides** that offer zero soft layers around the sides of your face."
+            ]
+        }
+        
+        if shape_folder in avoidance_tips:
+            with st.container(border=True):
+                st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles:")
+                for tip in avoidance_tips[shape_folder]:
+                    st.write(f"- {tip}")
     else:
         # If none of the extension styles were found, display an informative error log
         st.error(f"❌ Asset file missing inside folder structure! Searched for '{gender_file}' variations inside 'hairstyle_dataset/{shape_folder}/'")
 
-        # --- NEW FEATURE: STYLING TIPS TO AVOID MATRIX ---
-        st.write("---")
-        st.write("### ⚠️ Hairstyles to Avoid for Your Face Shape")
-        
-        # Comprehensive professional dictionary mapping rule configurations
-        avoidance_tips = {
-            'oval': [
-                "**Avoid heavy, long straight bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
-                " Avoid hairstyles that add excessive height or volume directly on the top without any width, which can make your face appear artificially long."
-            ],
-            'round': [
-                "**Avoid sleek, chin-length bobs with flat surfaces** that hug your face line, as they act like a border highlighting the roundness of your cheeks.",
-                " Avoid slicked-back styles or middle parts with no volume, which can compress your forehead proportions and make the face shape look even wider."
-            ],
-            'heart': [
-                "**Avoid heavy top volume or slick back styles with high pompadours**, as they add bulk to an already wide forehead line and accent a narrow chin.",
-                " Avoid short, blunt-cut wispy bangs or styles that end harshly right at your cheekbone levels, which can visually expand the upper half of your face."
-            ],
-            'square': [
-                "**Avoid sharp, blunt-cut straight fringes or geometric box haircuts**, as these parallel lines emphasize harsh jawline edges and make your face look boxy.",
-                " Avoid slicked-back ponytails, tightly pulled updos, or center parts with completely flat sides that offer zero soft layers around the sides of your face."
-            ]
-        }
-        
-        # Safely fetch matching tip text list based on what the AI model detected
-        current_shape = detected_shape.lower().strip()
-        
-        if current_shape in avoidance_tips:
-            # Render a styled container box to catch the user's eye
-            with st.container(border=True):
-                st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles:")
-                for tip in avoidance_tips[current_shape]:
-                    st.write(f"- {tip}")
-
+     
