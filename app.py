@@ -6,7 +6,6 @@ import urllib.request
 import os
 import av
 from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
-from PIL import Image
 
 st.set_page_config(page_title="Real-Time AI Hairstyle Matrix", page_icon="✂️", layout="wide")
 
@@ -32,11 +31,11 @@ HAIRSTYLES_LABELS = {
     'Square': ["Layered Waves", "Side Swept Bob", "Clean Buzz", "Crew Cut", "Textured Crop", "Classic Part", "Comb Over", "Long Shag", "Slicked Back"]
 }
 
-# Persistent states for tracking frames and predictions across background threads
-if "frame_count" not in st.session_state:
-    st.session_state.frame_count = 0
-if "current_face_shape" not in st.session_state:
-    st.session_state.current_face_shape = "Oval"
+# FIX: Use safe global variables instead of st.session_state to avoid segmentation faults
+GLOBAL_STATE = {
+    "frame_count": 0,
+    "current_face_shape": "Oval"
+}
 
 # 3. Modern Video Frame Callback Pipeline
 def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
@@ -49,15 +48,15 @@ def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
     start_y = (h - min_dim) // 2
     cropped_face = img[start_y:start_y+min_dim, start_x:start_x+min_dim]
     
-    # Classify the face shape every 15 frames to maintain speed performance
-    st.session_state.frame_count += 1
-    if st.session_state.frame_count % 15 == 0:
+    # Classify the face shape every 20 frames to keep framerates stable
+    GLOBAL_STATE["frame_count"] += 1
+    if GLOBAL_STATE["frame_count"] % 20 == 0:
         try:
             resized = cv2.resize(cropped_face, (224, 224))
             normalized = resized / 255.0
             tensor_input = np.expand_dims(normalized, axis=0)
             preds = model.predict(tensor_input, verbose=0)
-            st.session_state.current_face_shape = CLASSES[np.argmax(preds)]
+            GLOBAL_STATE["current_face_shape"] = CLASSES[np.argmax(preds)]
         except:
             pass
 
@@ -66,7 +65,8 @@ def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
     grid_img = np.zeros((sub_size * 3, sub_size * 3, 3), dtype=np.uint8)
     base_tile = cv2.resize(cropped_face, (sub_size, sub_size))
     
-    styles = HAIRSTYLES_LABELS[st.session_state.current_face_shape]
+    current_shape = GLOBAL_STATE["current_face_shape"]
+    styles = HAIRSTYLES_LABELS[current_shape]
     
     count = 0
     for r in range(3):
@@ -96,9 +96,9 @@ def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
             grid_img[r*sub_size:(r+1)*sub_size, c_idx*sub_size:(c_idx+1)*sub_size] = tile
             count += 1
             
-    # Prepend top black status board header strip
+    # Prepend top status bar header
     output_frame = cv2.copyMakeBorder(grid_img, 60, 0, 0, 0, cv2.BORDER_CONSTANT, value=(20, 24, 28))
-    cv2.putText(output_frame, f"LIVE TRACKING DETECTED: {st.session_state.current_face_shape.upper()} FACE STRUCTURE", 
+    cv2.putText(output_frame, f"LIVE TRACKING DETECTED: {current_shape.upper()} FACE STRUCTURE", 
                 (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 230, 110), 2, cv2.LINE_AA)
 
     return av.VideoFrame.from_ndarray(output_frame, format="bgr24")
@@ -107,13 +107,13 @@ def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
 st.title("Live Real-Time Hairstyle Filter Matrix ⚡")
 st.write("Activate your camera below. The AI will classify your facial structure real-time and render a 3x3 live filter overlay grid.")
 
-RTC_CONFIG = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
+RTC_CONFIG = RTCConfiguration({"iceServers": [{"urls": ["stun:://google.com"]}]})
 
 webrtc_streamer(
     key="hairstyle-matrix-stream",
     mode=WebRtcMode.SENDRECV,
     rtc_configuration=RTC_CONFIG,
-    video_frame_callback=video_frame_callback, # Updated line utilizing standard callback
+    video_frame_callback=video_frame_callback,
     async_processing=True,
     media_stream_constraints={"video": True, "audio": False}
 )
