@@ -45,6 +45,7 @@ if cam_image is not None:
     img_cv = np.array(image.convert('RGB'))
     img_cv = cv2.cvtColor(img_cv, cv2.COLOR_RGB2BGR)
     
+    # EXACT COORD CENTER MATRIX CROP FIX
     h, w, _ = img_cv.shape
     min_dim = min(h, w)
     start_x = (w - min_dim) // 2
