@@ -1,56 +1,56 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
+import urllib.request
+import os
 from PIL import Image, ImageFile
 
-# Allow truncated image handling for user uploads
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-# 1. Page Configuration Setup
 st.set_page_config(page_title="AI Hairstyle Recommender", page_icon="✂️", layout="centered")
 
-# 2. Load Your Trained Brain Safely
+# 1. Download Model from Google Drive dynamically if it doesn't exist locally
 @st.cache_resource
 def load_my_model():
-    # Looks for the file in the exact same directory
-    return tf.keras.models.load_model('hairstyle_model.h5')
+    MODEL_PATH = 'hairstyle_model.h5'
+    if not os.path.exists(MODEL_PATH):
+        with st.spinner("Downloading AI Model from Google Drive... Please wait a moment."):
+            FILE_ID = "1BrcUSYWTHb4F2Oz3h_wapVqiQadXZhpC" 
+            URL = f"https://google.com{FILE_ID}"
+            urllib.request.urlretrieve(URL, MODEL_PATH)
+    return tf.keras.models.load_model(MODEL_PATH)
 
 try:
     model = load_my_model()
     CLASSES = ['Heart', 'Oblong', 'Oval', 'Round', 'Square']
 except Exception as e:
-    st.error("Model file 'hairstyle_model.h5' not found in this folder. Please upload it to your folder environment.")
+    st.error(f"Error loading model: {e}")
     st.stop()
 
-# 3. User Interface Content
+# 2. User Interface Content
 st.title("AI Hairstyle Recommender ✂️")
 st.write("Upload a clear front-facing photo of yourself to find your face shape and the best matching hairstyles!")
 
 uploaded_file = st.file_uploader("Choose a selfie photo...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Display the uploaded file
     image = Image.open(uploaded_file)
     st.image(image, caption='Your Uploaded Selfie', use_container_width=True)
     
     st.info("🔄 Processing image and scanning facial structure...")
     
-    # Preprocess to match exactly how the AI model was trained
     img = image.resize((224, 224))
     if img.mode != 'RGB':
         img = img.convert('RGB')
     img_array = np.array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
     
-    # Run prediction logic
     prediction = model.predict(img_array)
     predicted_class = CLASSES[np.argmax(prediction)]
     confidence = np.max(prediction) * 100
     
-    # Show classification results
     st.success(f"### Target Match Identified: **{predicted_class}** ({confidence:.1f}% Confidence)")
     
-    # 4. Recommendation Mapping Rules logic
     st.write("---")
     st.write("### 💇‍♂️ Recommended Hairstyles for Your Face Shape:")
     
