@@ -67,13 +67,28 @@ if captured_image is not None:
     
     st.success(f"🎉 **Analysis Complete!** We detected a **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
     
-    st.write("---")
+       st.write("---")
     st.write(f"### 📋 Step 3: Your Suggested {gender.capitalize()} Hairstyles")
     
-    recommendation_path = os.path.join(ASSET_DIR, f"{detected_shape}/{gender}.png")
+    # 1. Format the folder and base filename into clean lower strings
+    shape_folder = detected_shape.lower().strip()
+    gender_file = gender.lower().strip()
     
-    if os.path.exists(recommendation_path):
+    # 2. List all common extensions to check sequentially
+    possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
+    recommendation_path = None
+    
+    # Loop through the list to find which version actually exists on the hosting server
+    for ext in possible_extensions:
+        test_path = os.path.join(ASSET_DIR, f"{shape_folder}/{gender_file}{ext}")
+        if os.path.exists(test_path):
+            recommendation_path = test_path
+            break  # Stop checking once we find a match!
+
+    # 3. Render the discovered file asset safely to the interface layout
+    if recommendation_path is not None:
         recommendation_graphic = Image.open(recommendation_path)
-        st.image(recommendation_graphic, use_container_width=True)
+        st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {detected_shape.upper()} faces")
     else:
-        st.error(f"Asset missing at: {recommendation_path}")
+        # If none of the extension styles were found, display an informative error log
+        st.error(f"❌ Asset file missing inside folder structure! Searched for '{gender_file}' variations inside 'hairstyle_dataset/{shape_folder}/'")
