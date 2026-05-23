@@ -67,7 +67,7 @@ if captured_image is not None:
     
     st.success(f"🎉 **Analysis Complete!** We detected a **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
     
-       st.write("---")
+    st.write("---")
     st.write(f"### 📋 Step 3: Your Suggested {gender.capitalize()} Hairstyles")
     
     # 1. Format the folder and base filename into clean lower strings
