@@ -112,24 +112,25 @@ if captured_image is not None:
             ]
         }
             # Gender-specific haircut lists to avoid
-            specific_cuts_to_avoid = {
-                'oval': {
-                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** High and tight mohawks, extremely high pomp-fades with bald-shaved sides, or flat micro-fringes.",
-                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Severe slicked-back high ponytails with zero face-framing layers, or bone-straight micro-bangs."
-                },
-                'round': {
-                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Flat, slicked-back side-parts, buzz cuts with zero top texture, or heavy bowl cuts.",
-                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** The classic blunt chin-length bob, flat pixie cuts with zero top texture, or sleek pageboy styles."
-                },
-                'heart': {
-                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Slicked-back undercut fades, wide straight-across block bangs, or high top-knots.",
-                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Short geometric pixie cuts with severe bangs, or harsh chin-length blunt cuts."
-                },
-                'square': {
-                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Geometric flat tops, severe slicked-back buzz cuts with hard lines, or wide square block-fades.",
-                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Sharp blunt flapper bobs, severe slicked-back buns, or straight-across heavy blunt fringes."
-                }
+            # Gender-specific haircut lists to avoid
+        specific_cuts_to_avoid = {
+            'oval': {
+                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** High and tight mohawks, extremely high pomp-fades with bald-shaved sides, or flat micro-fringes.",
+                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Severe slicked-back high ponytails with zero face-framing layers, or bone-straight micro-bangs."
+            },
+            'round': {
+                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Flat, slicked-back side-parts, buzz cuts with zero top texture, or heavy bowl cuts.",
+                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** The classic blunt chin-length bob, flat pixie cuts with zero top texture, or sleek pageboy styles."
+            },
+            'heart': {
+                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Slicked-back undercut fades, wide straight-across block bangs, or high top-knots.",
+                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Short geometric pixie cuts with severe bangs, or harsh chin-length blunt cuts."
+            },
+            'square': {
+                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Geometric flat tops, severe slicked-back buzz cuts with hard lines, or wide square block-fades.",
+                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Sharp blunt flapper bobs, severe slicked-back buns, or straight-across heavy blunt fringes."
             }
+        }
             
         if shape_folder in avoidance_tips:
             with st.container(border=True):
