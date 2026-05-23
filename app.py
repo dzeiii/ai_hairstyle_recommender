@@ -4,12 +4,13 @@ import numpy as np
 import cv2
 import urllib.request
 import os
-import av
-from streamlit_webrtc import webrtc_streamer, WebRtcMode, RTCConfiguration
+from PIL import Image, ImageFile
 
-st.set_page_config(page_title="Real-Time AI Hairstyle Matrix", page_icon="✂️", layout="wide")
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-# 1. Pull Trained Weights Securely
+st.set_page_config(page_title="AI Hairstyle Matrix Recommender", page_icon="✂️", layout="wide")
+
+# 1. Pull Trained Weights Securely from Google Drive
 @st.cache_resource
 def load_my_model():
     MODEL_PATH = 'hairstyle_model.h5'
@@ -31,89 +32,72 @@ HAIRSTYLES_LABELS = {
     'Square': ["Layered Waves", "Side Swept Bob", "Clean Buzz", "Crew Cut", "Textured Crop", "Classic Part", "Comb Over", "Long Shag", "Slicked Back"]
 }
 
-# FIX: Use safe global variables instead of st.session_state to avoid segmentation faults
-GLOBAL_STATE = {
-    "frame_count": 0,
-    "current_face_shape": "Oval"
-}
+# 3. User Interface Layout Architecture
+st.title("AI Hairstyle Filter Matrix Recommender ✂️")
+st.write("Capture a snapshot using your webcam. The AI will classify your facial structure and display your look under 9 distinct style filters inside a 3x3 layout grid!")
 
-# 3. Modern Video Frame Callback Pipeline
-def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
-    img = frame.to_ndarray(format="bgr24")
-    h, w, c = img.shape
+# Use Streamlit's native, lightweight camera capture feature
+cam_image = st.camera_input("Smile for the camera!")
+
+if cam_image is not None:
+    # Convert image format for processing
+    image = Image.open(cam_image)
+    img_cv = np.array(image.convert('RGB'))
+    img_cv = cv2.cvtColor(img_cv, cv2.COLOR_RGB2BGR)
     
-    # Crop to a clean square aspect ratio
+    h, w, _ = img_cv.shape
     min_dim = min(h, w)
     start_x = (w - min_dim) // 2
     start_y = (h - min_dim) // 2
-    cropped_face = img[start_y:start_y+min_dim, start_x:start_x+min_dim]
+    cropped_face = img_cv[start_y:start_y+min_dim, start_x:start_x+min_dim]
     
-    # Classify the face shape every 20 frames to keep framerates stable
-    GLOBAL_STATE["frame_count"] += 1
-    if GLOBAL_STATE["frame_count"] % 20 == 0:
-        try:
-            resized = cv2.resize(cropped_face, (224, 224))
-            normalized = resized / 255.0
-            tensor_input = np.expand_dims(normalized, axis=0)
-            preds = model.predict(tensor_input, verbose=0)
-            GLOBAL_STATE["current_face_shape"] = CLASSES[np.argmax(preds)]
-        except:
-            pass
+    # Process for Model Inference
+    with st.spinner("AI is analyzing your face structure contour points..."):
+        resized = cv2.resize(cropped_face, (224, 224))
+        normalized = resized / 255.0
+        tensor_input = np.expand_dims(normalized, axis=0)
+        preds = model.predict(tensor_input, verbose=0)
+        predicted_class = CLASSES[np.argmax(preds)]
+        confidence = np.max(preds) * 100
 
-    # Build the 3x3 layout frame grid matrix
-    sub_size = 250
+    st.success(f"### Detected Face Shape: **{predicted_class}** ({confidence:.1f}% Match Confidence)")
+    st.write("### Your Custom 3x3 Hairstyle Try-On Matrix:")
+    
+    # 4. Generate the 3x3 Filter Matrix Image
+    sub_size = 300
     grid_img = np.zeros((sub_size * 3, sub_size * 3, 3), dtype=np.uint8)
     base_tile = cv2.resize(cropped_face, (sub_size, sub_size))
     
-    current_shape = GLOBAL_STATE["current_face_shape"]
-    styles = HAIRSTYLES_LABELS[current_shape]
-    
+    styles = HAIRSTYLES_LABELS[predicted_class]
     count = 0
+    
     for r in range(3):
-        for c_idx in range(3):
+        for c in range(3):
             tile = base_tile.copy()
             style_name = styles[count]
             
-            # --- RENDER VIRTUAL HAIR STYLE GEOMETRY FILTERS ---
+            # --- RENDER UNIQUE HAIRSTYLE GEOMETRIC FILTER OVERLAYS ---
             if "Bangs" in style_name or "Fringe" in style_name:
-                cv2.ellipse(tile, (sub_size//2, sub_size//4), (80, 30), 0, 180, 360, (40, 20, 10), -1)
+                cv2.ellipse(tile, (sub_size//2, sub_size//4), (90, 35), 0, 180, 360, (40, 20, 10), -1)
             elif "Pompadour" in style_name or "High" in style_name or "Quiff" in style_name:
-                cv2.ellipse(tile, (sub_size//2, sub_size//5), (60, 45), 0, 180, 360, (20, 20, 20), -1)
+                cv2.ellipse(tile, (sub_size//2, sub_size//5), (70, 50), 0, 180, 360, (20, 20, 20), -1)
             elif "Long" in style_name or "Waves" in style_name:
-                cv2.rectangle(tile, (30, sub_size//3), (60, sub_size), (15, 30, 80), -1)
-                cv2.rectangle(tile, (sub_size-60, sub_size//3), (sub_size-30, sub_size), (15, 30, 80), -1)
+                cv2.rectangle(tile, (35, sub_size//3), (70, sub_size), (15, 30, 80), -1)
+                cv2.rectangle(tile, (sub_size-70, sub_size//3), (sub_size-35, sub_size), (15, 30, 80), -1)
             elif "Bob" in style_name or "Lob" in style_name:
-                cv2.ellipse(tile, (sub_size//2, sub_size//3), (95, 50), 0, 180, 360, (30, 60, 15), -1)
-                cv2.rectangle(tile, (25, sub_size//3), (50, int(sub_size*0.75)), (30, 60, 15), -1)
-                cv2.rectangle(tile, (sub_size-50, sub_size//3), (sub_size-25, int(sub_size*0.75)), (30, 60, 15), -1)
+                cv2.ellipse(tile, (sub_size//2, sub_size//3), (110, 60), 0, 180, 360, (30, 60, 15), -1)
+                cv2.rectangle(tile, (30, sub_size//3), (60, int(sub_size*0.8)), (30, 60, 15), -1)
+                cv2.rectangle(tile, (sub_size-60, sub_size//3), (sub_size-30, int(sub_size*0.8)), (30, 60, 15), -1)
             else:
-                cv2.circle(tile, (sub_size//2, sub_size//4), 70, (10, 10, 10), 3)
+                cv2.circle(tile, (sub_size//2, sub_size//4), 80, (10, 10, 10), 4)
 
-            # Draw Title Labels onto individual grid cell elements cleanly
-            cv2.rectangle(tile, (0, sub_size-30), (sub_size, sub_size), (0, 0, 0), -1)
-            cv2.putText(tile, style_name, (10, sub_size-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            # Insert Clean Text Labels on the Grid Cards
+            cv2.rectangle(tile, (0, sub_size-35), (sub_size, sub_size), (0, 0, 0), -1)
+            cv2.putText(tile, style_name, (15, sub_size-12), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
             
-            grid_img[r*sub_size:(r+1)*sub_size, c_idx*sub_size:(c_idx+1)*sub_size] = tile
+            grid_img[r*sub_size:(r+1)*sub_size, c*sub_size:(c+1)*sub_size] = tile
             count += 1
             
-    # Prepend top status bar header
-    output_frame = cv2.copyMakeBorder(grid_img, 60, 0, 0, 0, cv2.BORDER_CONSTANT, value=(20, 24, 28))
-    cv2.putText(output_frame, f"LIVE TRACKING DETECTED: {current_shape.upper()} FACE STRUCTURE", 
-                (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 230, 110), 2, cv2.LINE_AA)
-
-    return av.VideoFrame.from_ndarray(output_frame, format="bgr24")
-
-# 4. User Interface Architecture layout
-st.title("Live Real-Time Hairstyle Filter Matrix ⚡")
-st.write("Activate your camera below. The AI will classify your facial structure real-time and render a 3x3 live filter overlay grid.")
-
-RTC_CONFIG = RTCConfiguration({"iceServers": [{"urls": ["stun:://google.com"]}]})
-
-webrtc_streamer(
-    key="hairstyle-matrix-stream",
-    mode=WebRtcMode.SENDRECV,
-    rtc_configuration=RTC_CONFIG,
-    video_frame_callback=video_frame_callback,
-    async_processing=True,
-    media_stream_constraints={"video": True, "audio": False}
-)
+    # Render final matrix layout output onto screen
+    grid_rgb = cv2.cvtColor(grid_img, cv2.COLOR_BGR2RGB)
+    st.image(grid_rgb, caption="Your 3x3 Try-On Layout Matrix Grid", use_container_width=True)
