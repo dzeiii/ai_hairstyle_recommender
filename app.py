@@ -24,7 +24,7 @@ def load_face_model():
 
 if os.path.exists(MODEL_PATH):
     model = load_face_model()
-    LABELS = ['heart', 'oblong', 'oval', 'round', 'square']
+    LABELS = ['heart','oval', 'round', 'square']
 else:
     st.error("Model file 'face_shape_model.h5' not found in your folder!")
     st.stop()
