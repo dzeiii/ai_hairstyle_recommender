@@ -173,7 +173,7 @@ if captured_image is not None:
 
             if recommendation_path is not None:
                 recommendation_graphic = Image.open(recommendation_path)
-                st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
+                st.image(recommendation_graphic, use_column_width=True, caption=f"Best styles for {display_title} faces")
                 
                 st.write("---")
                 st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
