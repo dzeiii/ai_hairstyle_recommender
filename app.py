@@ -46,13 +46,13 @@ if not st.session_state.gender_selected:
         # Display selection tool
         category_choice = st.selectbox(
             "Select Your Gender Category:",
-            ["Choose Options", "Men", "Women"]
+            ["-- Choose Options --", "Men", "Women"]
         )
         
-        if category_choice != "Choose Options ":
+        if category_choice != "--Choose Options--":
             if st.button("Confirm", type="primary"):
                 # Map choice directly to folder structures
-                st.session_state.gender = "men" if category_choice == "Men" else "women"
+                st.session_state.gender = "men" if category_choice == "Men's Hairstyle" else "women"
                 st.session_state.gender_selected = True
                 st.rerun()
                 
@@ -105,7 +105,8 @@ if captured_image is not None:
     
     # Format strings strictly to strip out invisible break flags
     shape_folder = str(detected_shape).lower().strip()
-    gender_file = str(gender).lower().strip()
+    gender_file = str(st.session_state.gender).lower().strip()
+
     
     # List all common extensions to check sequentially
     possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
