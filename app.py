@@ -110,12 +110,12 @@ if captured_image is not None:
     resized_img = cv2.resize(img_array, (224, 224)) / 255.0
     input_batch = np.expand_dims(resized_img, axis=0)
     
-    # Run prediction weights
     predictions = model.predict(input_batch, verbose=0)
-    
-    highest_score_index = np.argmax(predictions)
+    prob_distribution = predictions[0]
+    highest_score_index = np.argmax(prob_distribution)
     detected_shape = LABELS[highest_score_index]
-    confidence_score = predictions[highest_score_index] * 100
+    
+    confidence_score = float(prob_distribution[highest_score_index] * 100)
     
     # Custom safety parameter threshold bypass option
     CONFIDENCE_THRESHOLD = 40.0
