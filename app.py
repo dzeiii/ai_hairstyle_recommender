@@ -46,24 +46,20 @@ if not st.session_state.gender_selected:
         # Display selection tool
         category_choice = st.selectbox(
             "Select Your Gender Category:",
-            ["-- Choose Options --", "Men", "Women"]
+            ["-- Choose Options --", "Men's Hairstyles", "Women's Hairstyles"]
         )
         
-        if category_choice != "--Choose Options--":
-            if st.button("Confirm", type="primary"):
-                # Map choice directly to folder structures
-                st.session_state.gender = "women" if category_choice == "Women" else "men"
-                st.session_state.gender_selected = True
-                st.rerun()
+        # Determine if the button should be disabled (True if placeholder is selected)
+        is_disabled = (category_choice == "-- Choose Options --")
+        
+        # The button dynamically locks/unlocks based on the 'is_disabled' variable status
+        if st.button("Confirm", type="primary", disabled=is_disabled):
+            # Map choice directly to folder structures
+            st.session_state.gender = "men" if category_choice == "Men's Hairstyles" else "women"
+            st.session_state.gender_selected = True
+            st.rerun()
                 
     st.stop() # Stops execution here so nothing else shows up until selection is made
-
-# --- DASHBOARD RE-ENTERS HERE ONCE CONFIRMED ---
-st.sidebar.header("App Configurations")
-st.sidebar.write(f"Current Category: **{st.session_state.gender.capitalize()}**")
-if st.sidebar.button("Switch Gender Category"):
-    st.session_state.gender_selected = False
-    st.rerun()
     
 st.write("---")
 st.write("### 📸 Step 1: Capture or Upload Your Face Image")
