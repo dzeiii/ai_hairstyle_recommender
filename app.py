@@ -52,8 +52,7 @@ if not st.session_state.gender_selected:
         if category_choice != "--Choose Options--":
             if st.button("Confirm", type="primary"):
                 # Map choice directly to folder structures
-                st.session_state.gender = "men" if category_choice == "Men's Hairstyle" 
-            else "women"
+                st.session_state.gender = "women" if category_choice == "Women" else "men"
                 st.session_state.gender_selected = True
                 st.rerun()
                 
