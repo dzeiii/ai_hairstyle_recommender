@@ -5,10 +5,7 @@ import tensorflow as tf
 from PIL import Image, ImageFile
 import os
 import mediapipe as mp
-print(cv2.__version__)
-print(mp.__version__)
 
-print(dir(mp.solutions))
 # Set up page layout using native Streamlit configuration
 st.set_page_config(page_title="HAIR WE GO!", page_icon="💇‍♂️", layout="centered")
 
@@ -35,7 +32,7 @@ else:
 
 # --- INITIALIZE MEDIAPIPE FACE DETECTION SOLUTIONS ---
 mp_face_detection = mp.solutions.face_detection
-face_detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.85)
+face_detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5)
 
 # --- ROUTING STATE MACHINE MATRIX ---
 if "gender_selected" not in st.session_state:
@@ -49,20 +46,19 @@ if "selectbox_index" not in st.session_state:
 if not st.session_state.gender_selected:
     st.write("---")
     
-    # Using simple, standard Streamlit cards and text
     with st.container(border=True):
         st.markdown("### 👋 Welcome to HAIR WE GO!")
         st.write("Please select your styling category below to unlock the real-time camera face shape scanner and recommended filters dashboard.")
     
     category_choice = st.selectbox(
         "Select Your Gender Category:",
-        ["Choose Options", "Men", "Women"],
+        ["-- Choose Options --", "Men's Hairstyles", "Women's Hairstyles"],
         index=st.session_state.selectbox_index
     )
     
     is_disabled = (category_choice == "Choose Options")
     
-    if st.button("Confirm", type="primary", disabled=is_disabled):
+    if st.button("Confirm Selection & Enter Dashboard", type="primary", disabled=is_disabled):
         if category_choice == "Men":
             st.session_state.gender = "men"
             st.session_state.selectbox_index = 1
@@ -101,7 +97,6 @@ with st.expander("ℹ️ Tips for Perfect AI Face Scanning", expanded=True):
 
 captured_image = None
 if source_option == "Use Live Camera":
-    # Display the regular web camera input window
     camera_input = st.camera_input("Position your face clearly in the center box boundary")
     if camera_input is not None:
         captured_image = Image.open(camera_input)
@@ -113,48 +108,44 @@ else:
 # Processing Logic
 if captured_image is not None:
     st.write("---")
-    st.write("### 🧠 Step 2: Processing AI Classification")
+    st.write("### 🧠 Step 2: Processing AI Classification...")
     st.image(captured_image, width=250, caption="Analyzed Face Profile")
-
-    img_array = np.array(captured_image.convert('RGB'))
-     # Ensure image is in standard RGB channel format for MediaPipe tracking
-    rgb_img = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
-    results = face_detector.process(rgb_img)
     
-    # 🚨 STRICT HUMAN STRUCTURAL VERIFICATION LAYER PASS 🚨
-    if results.detections is None or len(results.detections) == 0:
+    img_array = np.array(captured_image.convert('RGB'))
+    
+    # --- MODERN DEEP LEARNING HUMAN FACE VALIDATION LAYER VIA MEDIAPIPE ---
+    results = face_detector.process(img_array)
+    
+    is_human_face = False
+    
+    if results.detections:
+        for detection in results.detections:
+            # Check for the existence of human eye keypoints verified by MediaPipe
+            try:
+                keypoints = detection.location_data.relative_keypoints
+                # MediaPipe Landmark 0 is Right Eye, Landmark 1 is Left Eye
+                if len(keypoints) >= 2:
+                    is_human_face = True
+                    break
+            except:
+                pass
+
+    if not is_human_face:
         st.warning("⚠️ **Invalid Image Content Detected**")
-        st.error("No valid human face profile was found in this photo. Please make sure you are capturing a clear, front-facing portrait of an actual person and try again!")
+        st.error("No valid human face profile was found in this photo. Please look straight forward, remove any filters, and ensure your face is clearly visible!")
+        st.stop()
     else:
-        # --- NEW ANIMAL FILTER: aspect ratio validation check ---
-        # Grab the dimensions of the first detected face box boundary
-        detection = results.detections[0]
-        bbox = detection.location_data.relative_bounding_box
+        # --- PROCEED WITH AI PREDICTION IF REAL FACE IS CONFIRMED ---
+        resized_img = cv2.resize(img_array, (224, 224)) / 255.0
+        input_batch = np.expand_dims(resized_img, axis=0)
         
-        # Calculate aspect ratio (width divided by height)
-        box_width = bbox.width
-        box_height = bbox.height
-        face_ratio = box_width / box_height if box_height > 0 else 0
+        predictions = model.predict(input_batch, verbose=0)
+        prob_distribution = predictions[0]
         
-        # Human faces are vertical ovals. If wide (animal muzzle) or overly distorted:
-        # Standard human threshold falls strictly between 0.55 and 0.90
-        if face_ratio < 0.55 or face_ratio > 0.90:
-            st.warning("⚠️ **Invalid Image Content Detected**")
-            st.error("The system detected non-human geometric proportions (Animal/Object layout). Please make sure you upload a front-facing human portrait!")
-            st.stop()             
-        else:            
-            # --- PROCEED WITH AI PREDICTION ONLY IF A REAL FACE IS CONFIRMED ---
-            resized_img = cv2.resize(img_array, (224, 224)) / 255.0
-            input_batch = np.expand_dims(resized_img, axis=0)
-            
-            predictions = model.predict(input_batch, verbose=0)
-            prob_distribution = predictions[0] 
-            
-            highest_score_index = np.argmax(prob_distribution)
-            detected_shape = LABELS[highest_score_index]
-            confidence_score = float(prob_distribution[highest_score_index] * 100)
-            
-        # Professional certainty threshold floor
+        highest_score_index = np.argmax(prob_distribution)
+        detected_shape = LABELS[highest_score_index]
+        confidence_score = float(prob_distribution[highest_score_index] * 100)
+        
         CONFIDENCE_THRESHOLD = 40.0
         
         if confidence_score >= CONFIDENCE_THRESHOLD:
@@ -171,7 +162,6 @@ if captured_image is not None:
                 
             gender_file = str(st.session_state.gender).lower().strip()
             
-            # Extension scanning pipeline
             possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
             recommendation_path = None
             
@@ -183,7 +173,7 @@ if captured_image is not None:
 
             if recommendation_path is not None:
                 recommendation_graphic = Image.open(recommendation_path)
-                st.image(recommendation_graphic, use_column_width=True, caption=f"Best styles for {display_title} faces")
+                st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
                 
                 st.write("---")
                 st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
