@@ -54,10 +54,17 @@ if not st.session_state.gender_selected:
         
         # The button dynamically locks/unlocks based on the 'is_disabled' variable status
         if st.button("Confirm", type="primary", disabled=is_disabled):
-            # Map choice directly to folder structures
-            st.session_state.gender = "men" if category_choice == "Men's Hairstyles" else "women"
-            st.session_state.gender_selected = True
-            st.rerun()
+        # 1. FORCE the session state to update immediately upon clicking
+        if category_choice == "Men's Hairstyles":
+            st.session_state.gender = "men"
+        else:
+            st.session_state.gender = "women"
+            
+        # 2. Confirm selection status and clear the blocking loop
+        st.session_state.gender_selected = True
+        
+        # 3. Force Streamlit to cleanly refresh and apply the new values
+        st.rerun()
                 
     st.stop() # Stops execution here so nothing else shows up until selection is made
 # --- DASHBOARD RE-ENTERS HERE ONCE CONFIRMED ---
