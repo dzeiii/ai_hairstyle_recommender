@@ -113,7 +113,7 @@ else:
 # Processing Logic
 if captured_image is not None:
     st.write("---")
-    st.write("### 🧠 Step 2: Processing AI Classification...")
+    st.write("### 🧠 Step 2: Processing AI Classification")
     st.image(captured_image, width=250, caption="Analyzed Face Profile")
     
     img_array = np.array(captured_image.convert('RGB'))
@@ -163,8 +163,8 @@ if captured_image is not None:
 
             if recommendation_path is not None:
                 recommendation_graphic = Image.open(recommendation_path)
-                st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
-                
+                st.image(recommendation_graphic, use_column_width=True, caption=f"Best styles for {display_title} faces")
+
                 st.write("---")
                 st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
                 
