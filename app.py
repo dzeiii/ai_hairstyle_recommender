@@ -141,6 +141,7 @@ if captured_image is not None:
         if face_ratio < 0.55 or face_ratio > 0.90:
             st.warning("⚠️ **Invalid Image Content Detected**")
             st.error("The system detected non-human geometric proportions (Animal/Object layout). Please make sure you upload a front-facing human portrait!")
+            st.stop()             
         else:            
             # --- PROCEED WITH AI PREDICTION ONLY IF A REAL FACE IS CONFIRMED ---
             resized_img = cv2.resize(img_array, (224, 224)) / 255.0
