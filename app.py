@@ -197,9 +197,9 @@ if captured_image is not None:
             }
 tip_lookup = 'oval' if shape_folder == 'oval' and detected_shape.lower().strip() == 'oblong' else shape_folder
 if tip_lookup in avoidance_tips:
-st.markdown(
-    f"""⚠️ Hairstyles & Haircuts to Avoid for {detected_shape.upper()} Profiles ({gender_file.upper()})""",
-    unsafe_allow_html=True
+    st.markdown(
+        f"""⚠️ Hairstyles & Haircuts to Avoid for {detected_shape.upper()} Profiles ({gender_file.upper()})""",
+        unsafe_allow_html=True
     )
 for tip in avoidance_tips[tip_lookup]:
 st.write(f"- {tip}")
