@@ -214,8 +214,8 @@ if captured_image is not None:
                 }
             }
 
-           else:
-            st.error("❌ Asset file missing inside folder structure! Please ensure your men.png or women.png cards are uploaded correctly to your hairstyle_dataset folders on GitHub.")
+        else:
+                st.error("❌ Asset file missing inside folder structure! Please ensure your men.png or women.png cards are uploaded correctly to your hairstyle_dataset folders on GitHub.")
             
     else:
         st.warning(f"⚠️ **Low Prediction Confidence ({confidence_score:.1f}%)**")
