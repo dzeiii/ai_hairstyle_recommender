@@ -115,7 +115,8 @@ if captured_image is not None:
     st.write("---")
     st.write("### 🧠 Step 2: Processing AI Classification")
     st.image(captured_image, width=250, caption="Analyzed Face Profile")
-    
+
+    img_array = np.array(captured_image.convert('RGB'))
      # Ensure image is in standard RGB channel format for MediaPipe tracking
     rgb_img = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
     results = face_detector.process(rgb_img)
