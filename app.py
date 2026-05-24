@@ -100,7 +100,8 @@ if captured_image is not None:
     st.success(f"🎉 **Analysis Complete!** We detected a **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
     
     st.write("---")
-    st.write(f"### 📋 Step 3: Your Suggested {gender.capitalize()} Hairstyles")
+    st.write(f"### 📋 Step 3: Your Suggested {st.session_state.gender.capitalize()} Hairstyles")
+
     
     # Format strings strictly to strip out invisible break flags
     shape_folder = str(detected_shape).lower().strip()
