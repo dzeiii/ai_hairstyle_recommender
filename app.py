@@ -4,9 +4,19 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageFile
 import os
+import mediapipe as mp
 
 # Set up page layout
 st.set_page_config(page_title="HAIR WE GO!", page_icon="💇‍♂️", layout="centered")
+
+# --- SEPARATE CSS SHEET LOADER INJECT ---
+def local_css(file_name):
+    if os.path.exists(file_name):
+        with open(file_name, "r") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Run the loader to pull in your separate style sheet styles instantly
+local_css("static/style.css")
 
 st.title("💇‍♂️ HAIR WE GO!")
 st.subheader("AI Hairstyle Recommendation Dashboard")
@@ -29,8 +39,12 @@ else:
     st.error("Model file 'face_shape_model.h5' not found in your folder!")
     st.stop()
 
-# --- RE-ENGINEERED ROUTING STATE MACHINE MATRIX ---
-# Initialize session states cleanly with concrete index mapping parameters
+# --- INITIALIZE MEDIAPIPE FACE DETECTION SOLUTIONS ---
+mp_face_detection = mp.solutions.face_detection
+# Initialize face detection model with a high-confidence threshold
+face_detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.6)
+
+# --- ROUTING STATE MACHINE MATRIX ---
 if "gender_selected" not in st.session_state:
     st.session_state.gender_selected = False
 if "gender" not in st.session_state:
@@ -38,10 +52,8 @@ if "gender" not in st.session_state:
 if "selectbox_index" not in st.session_state:
     st.session_state.selectbox_index = 0
 
-# INTERCEPT GATE: If selection is unlocked, render the welcome card block
 if not st.session_state.gender_selected:
     st.write("---")
-    
     st.markdown(
         """
         <div class="welcome-card-box">
@@ -52,46 +64,69 @@ if not st.session_state.gender_selected:
         unsafe_allow_html=True
     )
     
-    # Load selection tool tracking choice dynamically via session index parameters
     category_choice = st.selectbox(
         "Select Your Gender Category:",
-        ["Choose Options", "Men", "Women"],
+        ["-- Choose Options --", "Men's Hairstyles", "Women's Hairstyles"],
         index=st.session_state.selectbox_index
     )
     
-    is_disabled = (category_choice == "Choose Options")
+    is_disabled = (category_choice == "-- Choose Options --")
     
-    if st.button("Confirm", type="primary", disabled=is_disabled):
-        if category_choice == "Men":
+    if st.button("Confirm Selection & Enter Dashboard", type="primary", disabled=is_disabled):
+        if category_choice == "Men's Hairstyles":
             st.session_state.gender = "men"
             st.session_state.selectbox_index = 1
-        elif category_choice == "Women":
+        elif category_choice == "Women's Hairstyles":
             st.session_state.gender = "women"
             st.session_state.selectbox_index = 2
             
         st.session_state.gender_selected = True
         st.rerun()
             
-    st.stop() # Freeze rendering thread until user unlocks setup page matrix params
+    st.stop() 
 
-# --- MAIN DASHBOARD ENTERS HERE ONLY AFTER CONFIRMATION ---
+# --- MAIN DASHBOARD ---
 st.sidebar.header("App Configurations")
 st.sidebar.write(f"Current Category: **{st.session_state.gender.capitalize()}**")
 
-# FIXED SWITCH ROUTER: Forcefully flush historical memory arrays cleanly
 if st.sidebar.button("Switch Gender Category"):
     st.session_state.gender_selected = False
-    st.session_state.selectbox_index = 0 # Reset pick state back to '-- Choose Options --' placeholder
+    st.session_state.selectbox_index = 0 
     st.rerun()
 
 st.write("---")
 st.write("### 📸 Step 1: Capture or Upload Your Face Image")
 source_option = st.radio("Choose Input Method:", ("Use Live Camera", "Upload Image File"), key="input_method_toggle")
 
+with st.expander("ℹ️ Tips for Perfect AI Face Scanning", expanded=True):
+    st.markdown(
+        """
+        To achieve maximum accuracy from the deep learning classification nodes, follow these scanning configurations:
+        - **☀️ Clear Lighting:** Ensure your face is evenly lit from the front. Avoid harsh side shadows or dark environments.
+        - **🧱 Plain Background:** Stand against a solid wall or neutral background. Remove objects, text clutter, or people behind you.
+        - **📐 Straight Angle:** Look straight forward into the lens grid. Keep your camera at eye level with zero head tilt or side turns.
+        - **👓 Remove Accessories:** Take off glasses, hats, headphones, or bulky headwear that can mask your natural facial bone boundaries.
+        """
+    )
+
 captured_image = None
 if source_option == "Use Live Camera":
-    camera_input = st.camera_input("Position your face clearly in the center box boundary",
-                                   help="💡 For accurate AI analysis: Sit facing a bright light source and ensure your background is plain.")
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stCameraInput"] {
+            max-width: 480px !important;  
+            margin: 0 auto !important;     
+            aspect-ratio: 4 / 3 !important; 
+        }
+        div[data-testid="stCameraInput"] video {
+            object-fit: cover !important; 
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    camera_input = st.camera_input("Position your face clearly in the center box boundary")
     if camera_input is not None:
         captured_image = Image.open(camera_input)
 else:
@@ -105,18 +140,13 @@ if captured_image is not None:
     st.write("### 🧠 Step 2: Processing AI Classification...")
     st.image(captured_image, width=250, caption="Analyzed Face Profile")
     
-    # Convert picture array data cleanly
     img_array = np.array(captured_image.convert('RGB'))
     
-    # --- HUMAN FACE STRUCTURAL VALIDATION LAYER ---
-    gray_img = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    # --- MODERN DEEP LEARNING HUMAN FACE VALIDATION LAYER VIA MEDIAPIPE ---
+    results = face_detector.process(img_array)
     
-    # Scan for human face features
-    detected_faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-    
-    # If NO human face structures are found on screen:
-    if len(detected_faces) == 0:
+    # Check if MediaPipe successfully detected structural facial frames
+    if not results.detections:
         st.warning("⚠️ **Invalid Image Content Detected**")
         st.error("No valid human face profile was found in this photo. Please make sure you are capturing a clear, front-facing portrait of a person and try again!")
     else:
@@ -124,9 +154,8 @@ if captured_image is not None:
         resized_img = cv2.resize(img_array, (224, 224)) / 255.0
         input_batch = np.expand_dims(resized_img, axis=0)
         
-        # Run prediction weights
         predictions = model.predict(input_batch, verbose=0)
-        prob_distribution = predictions[0]
+        prob_distribution = predictions
         
         highest_score_index = np.argmax(prob_distribution)
         detected_shape = LABELS[highest_score_index]
@@ -148,7 +177,6 @@ if captured_image is not None:
                 
             gender_file = str(st.session_state.gender).lower().strip()
             
-            # Check all possible extensions
             possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
             recommendation_path = None
             
@@ -164,7 +192,6 @@ if captured_image is not None:
                 
                 st.write("---")
                 
-                # --- DYNAMIC TEXT CONTENT TO AVOID MATRIX ---
                 avoidance_tips = {
                     'oval': [
                         "**Avoid heavy, long straight blunt bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
@@ -188,7 +215,7 @@ if captured_image is not None:
                     ]
                 }
                 
-                specific_cuts_to_avoid = {
+              specific_cuts_to_avoid = {
                     'oval': {
                         'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** High and tight mohawks, extremely high pomp-fades with bald-shaved sides, or flat micro-fringes.",
                         'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Severe slicked-back high ponytails with zero face-framing layers, or bone-straight micro-bangs."
