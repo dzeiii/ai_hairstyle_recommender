@@ -90,9 +90,11 @@ if source_option == "Use Live Camera":
         unsafe_allow_html=True
     )
     
+    st.info("💡 **AI Scanning Requirements:** Ensure you are facing clear lighting and sitting against a plain background for accurate results.")
     camera_input = st.camera_input("Position your face clearly in the center box boundary")
     if camera_input is not None:
         captured_image = Image.open(camera_input)
+
 else:
     file_input = st.file_uploader("Upload a front-facing portrait photo", type=["jpg", "jpeg", "png"])
     if file_input is not None:
@@ -113,107 +115,90 @@ if captured_image is not None:
     # Run prediction
     predictions = model.predict(input_batch, verbose=0)[0]  # <-- ADDED [0] HERE
     
-      # Calculate the prediction metrics
     highest_score_index = np.argmax(predictions)
     detected_shape = LABELS[highest_score_index]
     confidence_score = predictions[highest_score_index] * 100
     
-    # Set a professional validation threshold (e.g., 55%)
+    # Define a strict certainty floor for your capstone presentation defense
     CONFIDENCE_THRESHOLD = 55.0
     
     if confidence_score >= CONFIDENCE_THRESHOLD:
         st.success(f"🎉 **Analysis Complete!** We detected a **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
+        st.write("---")
+        st.write(f"### 📋 Step 3: Your Suggested {st.session_state.gender.capitalize()} Hairstyles")
         
-        # Keep your existing image rendering and avoidance logic here...
         shape_folder = str(detected_shape).lower().strip()
         gender_file = str(st.session_state.gender).lower().strip()
         
-        # [Insert your existing extension loop and image display code here]
+        possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
+        recommendation_path = None
         
-    else:
-        # If the model is guessing blindly, prompt for a cleaner capture layout
-        st.warning(f"⚠️ **Low Prediction Confidence ({confidence_score:.1f}%)**")
-        st.error("The AI is uncertain about your face shape due to lighting, angle, or background clutter. Please adjust your positioning and retake the photo under clear, front-facing lighting!")
+        for ext in possible_extensions:
+            test_path = os.path.join(ASSET_DIR, f"{shape_folder}/{gender_file}{ext}")
+            if os.path.exists(test_path):
+                recommendation_path = test_path
+                break
 
-    
-    st.write("---")
-    st.write(f"### 📋 Step 3: Your Suggested {st.session_state.gender.capitalize()} Hairstyles")
-    
-    # List all common extensions to check sequentially
-    possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
-    recommendation_path = None
-    
-    for ext in possible_extensions:
-        test_path = os.path.join(ASSET_DIR, f"{shape_folder}/{gender_file}{ext}")
-        if os.path.exists(test_path):
-            recommendation_path = test_path
-            break  # Stop checking once we find a match!
-
-    # Render the discovered file asset safely to the interface layout
-    if recommendation_path is not None:
-        recommendation_graphic = Image.open(recommendation_path)
-        st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {detected_shape.upper()} faces")
-        
-        # --- FIXED STYLING TIPS MATRIX ---
-        st.write("---")
-        st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
-        
-        # Base rules applicable to all genders
-        avoidance_tips = {
-            'oval': [
-                "**Avoid heavy, long straight blunt bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
-                "**Avoid hairstyles that add excessive height or volume** directly on the top without any width, which can stretch your facial features and make your face appear artificially long."
-            ],
-            'round': [
-                "**Avoid sleek, flat surfaces** that hug your face line, as they act like a border highlighting the roundness of your cheeks.",
-                "**Avoid slicked-back styles or middle parts with zero top volume**, which compress your forehead proportions and make the face shape look even wider."
-            ],
-            'heart': [
-                "**Avoid heavy top volume or high pompadours**, as they add bulk to an already wide forehead line and accent a narrow chin.",
-                "**Avoid short, blunt-cut wispy bangs** or styles that end harshly right at your cheekbone levels, which can visually expand the upper half of your face."
-            ],
-            'square': [
-                "**Avoid sharp, blunt-cut straight fringes or geometric box layouts**, as these parallel lines emphasize harsh jawline edges and make your face look boxy.",
-                "**Avoid slicked-back look variations or center parts with completely flat sides** that offer zero soft volume around the sides of your face."
-            ]
-        }
-        
-        # Gender-specific list mapping dictionary
-        specific_cuts_to_avoid = {
-            'oval': {
-                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** High and tight mohawks, extremely high pomp-fades with bald-shaved sides, or flat micro-fringes.",
-                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Severe slicked-back high ponytails with zero face-framing layers, or bone-straight micro-bangs."
-            },
-            'round': {
-                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Flat, slicked-back side-parts, buzz cuts with zero top texture, or heavy bowl cuts.",
-                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** The classic blunt chin-length bob, flat pixie cuts with zero top texture, or sleek pageboy styles."
-            },
-            'heart': {
-                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Slicked-back undercut fades, wide straight-across block bangs, or high top-knots.",
-                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Short geometric pixie cuts with severe bangs, or harsh chin-length blunt cuts."
-            },
-            'square': {
-                'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Geometric flat tops, severe slicked-back buzz cuts with hard lines, or wide square block-fades.",
-                'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Sharp blunt flapper bobs, severe slicked-back buns, or straight-across heavy blunt fringes."
+        if recommendation_path is not None:
+            recommendation_graphic = Image.open(recommendation_path)
+            st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {detected_shape.upper()} faces")
+            
+            st.write("---")
+            st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
+            
+            avoidance_tips = {
+                'oval': [
+                    "**Avoid heavy, long straight blunt bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
+                    "**Avoid hairstyles that add excessive height or volume** directly on the top without any width, which can stretch your facial features and make your face appear artificially long."
+                ],
+                'round': [
+                    "**Avoid sleek, flat surfaces** that hug your face line, as they act like a border highlighting the roundness of your cheeks.",
+                    "**Avoid slicked-back styles or middle parts with zero top volume**, which compress your forehead proportions and make the face shape look even wider."
+                ],
+                'heart': [
+                    "**Avoid heavy top volume or high pompadours**, as they add bulk to an already wide forehead line and accent a narrow chin.",
+                    "**Avoid short, blunt-cut wispy bangs** or styles that end harshly right at your cheekbone levels, which can visually expand the upper half of your face."
+                ],
+                'square': [
+                    "**Avoid sharp, blunt-cut straight fringes or geometric box layouts**, as these parallel lines emphasize harsh jawline edges and make your face look boxy.",
+                    "**Avoid slicked-back look variations or center parts with completely flat sides** that offer zero soft volume around the sides of your face."
+                ]
             }
-        }
-        
-        # Display the formatted tips inside a clean container box
-        if shape_folder in avoidance_tips:
-            with st.container(border=True):
-                st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles ({gender_file.upper()}):")
-                
-                # Print the general rules
-                for tip in avoidance_tips[shape_folder]:
-                    st.write(f"- {tip}")
-                
-                # Fetch gender specific rule text block safely without variable collisions
-                if shape_folder in specific_cuts_to_avoid:
-                    gender_data = specific_cuts_to_avoid[shape_folder]
-                    if gender_file in gender_data:
-                        st.write(f"- {gender_data[gender_file]}")
-                    else:
-                        st.write(f"Debug: gender key '{gender_file}' not found.")
-                        
+            
+            specific_cuts_to_avoid = {
+                'oval': {
+                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** High and tight mohawks, extremely high pomp-fades with bald-shaved sides, or flat micro-fringes.",
+                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Severe slicked-back high ponytails with zero face-framing layers, or bone-straight micro-bangs."
+                },
+                'round': {
+                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Flat, slicked-back side-parts, buzz cuts with zero top texture, or heavy bowl cuts.",
+                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** The classic blunt chin-length bob, flat pixie cuts with zero top texture, or sleek pageboy styles."
+                },
+                'heart': {
+                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Slicked-back undercut fades, wide straight-across block bangs, or high top-knots.",
+                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Short geometric pixie cuts with severe bangs, or harsh chin-length blunt cuts."
+                },
+                'square': {
+                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Geometric flat tops, severe slicked-back buzz cuts with hard lines, or wide square block-fades.",
+                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Sharp blunt flapper bobs, severe slicked-back buns, or straight-across heavy blunt fringes."
+                }
+            }
+            
+            if shape_folder in avoidance_tips:
+                with st.container(border=True):
+                    st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles ({gender_file.upper()}):")
+                    for tip in avoidance_tips[shape_folder]:
+                        st.write(f"- {tip}")
+                    if shape_folder in specific_cuts_to_avoid:
+                        gender_data = specific_cuts_to_avoid[shape_folder]
+                        if gender_file in gender_data:
+                            st.write(f"- {gender_data[gender_file]}")
+                            
+        else:
+            st.error(f"❌ Asset file missing inside folder structure! Searched for '{gender_file}' variations inside 'hairstyle_dataset/{shape_folder}/'")
+            
     else:
-        st.error(f"❌ Asset file missing inside folder structure! Searched for '{gender_file}' variations inside 'hairstyle_dataset/{shape_folder}/'")
+        # --- FALLBACK ERROR BOX RUNS DYNAMICALLY IF MODEL CONFIDENCE IS POOR ---
+        st.warning(f"⚠️ **Low Prediction Confidence ({confidence_score:.1f}%)**")
+        st.error("The AI is uncertain about your face shape due to lighting angles or background clutter. Please look straight forward under clear lighting and capture a new image profile profile setup matrix.")
+
