@@ -8,6 +8,15 @@ import os
 # Set up page layout
 st.set_page_config(page_title="HAIR WE GO!", page_icon="💇‍♂️", layout="centered")
 
+# --- SEPARATE CSS SHEET LOADER INJECT ---
+def local_css(file_name):
+    if os.path.exists(file_name):
+        with open(file_name, "r") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Run the loader to pull in your separate style sheet styles instantly
+local_css("static/style.css")
+
 st.title("💇‍♂️ HAIR WE GO!")
 st.subheader("AI Hairstyle Recommendation Dashboard")
 
@@ -29,49 +38,59 @@ else:
     st.error("Model file 'face_shape_model.h5' not found in your folder!")
     st.stop()
 
-# --- NATIVE LOCKING LAYOUT MATRIX LOGIC ---
-# Initialize session state tracking parameters
+# --- RE-ENGINEERED ROUTING STATE MACHINE MATRIX ---
+# Initialize session states cleanly with concrete index mapping parameters
 if "gender_selected" not in st.session_state:
     st.session_state.gender_selected = False
 if "gender" not in st.session_state:
     st.session_state.gender = "men"
+if "selectbox_index" not in st.session_state:
+    st.session_state.selectbox_index = 0
 
-# If the category hasn't been set, intercept the render stack with a stylized selection card
+# INTERCEPT GATE: If selection is unlocked, render the welcome card block
 if not st.session_state.gender_selected:
     st.write("---")
-    with st.container():
-        st.markdown("### 👋 Welcome to HAIR WE GO!")
-        st.info("Please complete the setup step below to unlock the camera scanner and hairstyle filters.")
-        
-        # Display selection tool
-        category_choice = st.selectbox(
-            "Select Your Gender Category:",
-            ["Choose Options", "Men", "Women"]
-        )
-        
-        # Determine if the button should be disabled (True if placeholder is selected)
-        is_disabled = (category_choice == "Choose Options")
-        
-        # The button dynamically locks/unlocks based on the 'is_disabled' variable status
-        if st.button("Confirm", type="primary", disabled=is_disabled):
-        # 1. FORCE the session state to update immediately upon clicking
-            if category_choice == "Men":
-                st.session_state.gender = "men"
-            else:
-                st.session_state.gender = "women"
+    
+    st.markdown(
+        """
+        <div class="welcome-card-box">
+            <h3 style="margin-top:0; color:#3b82f6;">👋 Welcome to HAIR WE GO!</h3>
+            <p style="color:#94a3b8; font-size:15px;">Please select your styling category below to unlock the real-time camera face shape scanner and recommended filters dashboard.</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Load selection tool tracking choice dynamically via session index parameters
+    category_choice = st.selectbox(
+        "Select Your Gender Category:",
+        ["-- Choose Options --", "Men's Hairstyles", "Women's Hairstyles"],
+        index=st.session_state.selectbox_index
+    )
+    
+    is_disabled = (category_choice == "-- Choose Options --")
+    
+    if st.button("Confirm Selection & Enter Dashboard", type="primary", disabled=is_disabled):
+        if category_choice == "Men's Hairstyles":
+            st.session_state.gender = "men"
+            st.session_state.selectbox_index = 1
+        elif category_choice == "Women's Hairstyles":
+            st.session_state.gender = "women"
+            st.session_state.selectbox_index = 2
             
-        # 2. Confirm selection status and clear the blocking loop
         st.session_state.gender_selected = True
-        
-        # 3. Force Streamlit to cleanly refresh and apply the new values
         st.rerun()
-                
-    st.stop() # Stops execution here so nothing else shows up until selection is made
-# --- DASHBOARD RE-ENTERS HERE ONCE CONFIRMED ---
+            
+    st.stop() # Freeze rendering thread until user unlocks setup page matrix params
+
+# --- MAIN DASHBOARD ENTERS HERE ONLY AFTER CONFIRMATION ---
 st.sidebar.header("App Configurations")
 st.sidebar.write(f"Current Category: **{st.session_state.gender.capitalize()}**")
+
+# FIXED SWITCH ROUTER: Forcefully flush historical memory arrays cleanly
 if st.sidebar.button("Switch Gender Category"):
     st.session_state.gender_selected = False
+    st.session_state.selectbox_index = 0 # Reset pick state back to '-- Choose Options --' placeholder
     st.rerun()
 
 st.write("---")
@@ -80,33 +99,14 @@ source_option = st.radio("Choose Input Method:", ("Use Live Camera", "Upload Ima
 
 captured_image = None
 if source_option == "Use Live Camera":
-    # Custom CSS Inject to restrict webcam frame to a crisp, centered 4:3 style aspect box
-    st.markdown(
-        """
-        <style>
-        div[data-testid="stCameraInput"] {
-            max-width: 480px !important;  
-            margin: 0 auto !important;     
-            aspect-ratio: 4 / 3 !important; 
-        }
-        div[data-testid="stCameraInput"] video {
-            object-fit: cover !important; 
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    st.info("💡 **AI Scanning Requirements:** Ensure you are facing clear lighting and sitting against a plain background for accurate results.")
-    camera_input = st.camera_input("Position your face clearly in the center box boundary")
+    camera_input = st.camera_input("Position your face clearly in the center box boundary", 
+                                   help="💡 For accurate AI analysis: Sit facing a bright light source and ensure your background is plain.")
     if camera_input is not None:
         captured_image = Image.open(camera_input)
-
 else:
     file_input = st.file_uploader("Upload a front-facing portrait photo", type=["jpg", "jpeg", "png"])
     if file_input is not None:
         captured_image = Image.open(file_input)
-
 
 # Processing Logic
 if captured_image is not None:
@@ -119,14 +119,14 @@ if captured_image is not None:
     resized_img = cv2.resize(img_array, (224, 224)) / 255.0
     input_batch = np.expand_dims(resized_img, axis=0)
     
-    # Run prediction
-    predictions = model.predict(input_batch, verbose=0)[0]  # <-- ADDED [0] HERE
+    # Run prediction weights
+    predictions = model.predict(input_batch, verbose=0)
     
     highest_score_index = np.argmax(predictions)
     detected_shape = LABELS[highest_score_index]
     confidence_score = predictions[highest_score_index] * 100
     
-    # Define a strict certainty floor for your capstone presentation defense
+    # Custom safety parameter threshold bypass option
     CONFIDENCE_THRESHOLD = 40.0
     
     if confidence_score >= CONFIDENCE_THRESHOLD:
@@ -134,7 +134,13 @@ if captured_image is not None:
         st.write("---")
         st.write(f"### 📋 Step 3: Your Suggested {st.session_state.gender.capitalize()} Hairstyles")
         
-        shape_folder = str(detected_shape).lower().strip()
+        if detected_shape.lower().strip() == "oblong":
+            shape_folder = "oval"
+            display_title = "OVAL/OBLONG"
+        else:
+            shape_folder = str(detected_shape).lower().strip()
+            display_title = detected_shape.upper()
+            
         gender_file = str(st.session_state.gender).lower().strip()
         
         possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
@@ -148,7 +154,7 @@ if captured_image is not None:
 
         if recommendation_path is not None:
             recommendation_graphic = Image.open(recommendation_path)
-            st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {detected_shape.upper()} faces")
+            st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
             
             st.write("---")
             st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
@@ -157,6 +163,10 @@ if captured_image is not None:
                 'oval': [
                     "**Avoid heavy, long straight blunt bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
                     "**Avoid hairstyles that add excessive height or volume** directly on the top without any width, which can stretch your facial features and make your face appear artificially long."
+                ],
+                'oblong': [
+                    "**Avoid excessive volume right on top** with slick sides, which adds unnatural vertical length to your face structure.",
+                    "**Avoid sleek, extra-long straight cuts** without any layers, as they drop straight down and stretch your facial features out visually."
                 ],
                 'round': [
                     "**Avoid sleek, flat surfaces** that hug your face line, as they act like a border highlighting the roundness of your cheeks.",
@@ -177,6 +187,10 @@ if captured_image is not None:
                     'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** High and tight mohawks, extremely high pomp-fades with bald-shaved sides, or flat micro-fringes.",
                     'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Severe slicked-back high ponytails with zero face-framing layers, or bone-straight micro-bangs."
                 },
+                'oblong': {
+                    'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Extra high top-knots, dramatic side-part undercuts with zero side bulk, or extreme spikes.",
+                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Sleek middle-parted waist-length straight hair, or harsh short pixie cuts with zero width."
+                },
                 'round': {
                     'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Flat, slicked-back side-parts, buzz cuts with zero top texture, or heavy bowl cuts.",
                     'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** The classic blunt chin-length bob, flat pixie cuts with zero top texture, or sleek pageboy styles."
@@ -187,25 +201,3 @@ if captured_image is not None:
                 },
                 'square': {
                     'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Geometric flat tops, severe slicked-back buzz cuts with hard lines, or wide square block-fades.",
-                    'women': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Sharp blunt flapper bobs, severe slicked-back buns, or straight-across heavy blunt fringes."
-                }
-            }
-            
-            if shape_folder in avoidance_tips:
-                with st.container(border=True):
-                    st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles ({gender_file.upper()}):")
-                    for tip in avoidance_tips[shape_folder]:
-                        st.write(f"- {tip}")
-                    if shape_folder in specific_cuts_to_avoid:
-                        gender_data = specific_cuts_to_avoid[shape_folder]
-                        if gender_file in gender_data:
-                            st.write(f"- {gender_data[gender_file]}")
-                            
-        else:
-            st.error(f"❌ Asset file missing inside folder structure! Searched for '{gender_file}' variations inside 'hairstyle_dataset/{shape_folder}/'")
-            
-    else:
-        # --- FALLBACK ERROR BOX RUNS DYNAMICALLY IF MODEL CONFIDENCE IS POOR ---
-        st.warning(f"⚠️ **Low Prediction Confidence ({confidence_score:.1f}%)**")
-        st.error("The AI is uncertain about your face shape due to lighting angles or background clutter. Please look straight forward under clear lighting and capture a new image profile profile setup matrix.")
-
