@@ -5,7 +5,10 @@ import tensorflow as tf
 from PIL import Image, ImageFile
 import os
 import mediapipe as mp
+print(cv2.__version__)
+print(mp.__version__)
 
+print(dir(mp.solutions))
 # Set up page layout using native Streamlit configuration
 st.set_page_config(page_title="HAIR WE GO!", page_icon="💇‍♂️", layout="centered")
 
