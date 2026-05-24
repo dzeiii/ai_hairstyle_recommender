@@ -91,7 +91,7 @@ source_option = st.radio("Choose Input Method:", ("Use Live Camera", "Upload Ima
 captured_image = None
 if source_option == "Use Live Camera":
     camera_input = st.camera_input("Position your face clearly in the center box boundary", 
-                                   help="💡 For accurate AI analysis: Sit facing a bright light source and ensure your background is plain.")
+                                "💡 For accurate AI analysis: Sit facing a bright light source and ensure your background is plain.")
     if camera_input is not None:
         captured_image = Image.open(camera_input)
 else:
