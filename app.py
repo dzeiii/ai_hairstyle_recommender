@@ -130,7 +130,7 @@ if captured_image is not None:
         input_batch = np.expand_dims(resized_img, axis=0)
         
         predictions = model.predict(input_batch, verbose=0)
-        prob_distribution = predictions 
+        prob_distribution = predictions[0]
         
         highest_score_index = np.argmax(prob_distribution)
         detected_shape = LABELS[highest_score_index]
