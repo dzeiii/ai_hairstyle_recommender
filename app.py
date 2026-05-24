@@ -162,7 +162,12 @@ if captured_image is not None:
                 recommendation_graphic = Image.open(recommendation_path)
                 st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
                 
-                st.write("---")
+                         if recommendation_path is not None:
+                recommendation_graphic = Image.open(recommendation_path)
+                st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
+                
+            st.write("---")
+            st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
             avoidance_tips = {
                 'oval': [
                     "**Avoid heavy, long straight blunt bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
@@ -208,25 +213,10 @@ if captured_image is not None:
                     'women': "**❌ SPECIFIC HAIRCUTS TO AVOID: Sharp blunt flapper bobs, severe slicked-back buns, or straight-across heavy blunt fringes."
                 }
             }
-            tip_lookup = 'oval' if shape_folder == 'oval' and detected_shape.lower().strip() == 'oblong' else shape_folder
+
+           else:
+            st.error("❌ Asset file missing inside folder structure! Please ensure your men.png or women.png cards are uploaded correctly to your hairstyle_dataset folders on GitHub.")
             
-            if tip_lookup in avoidance_tips:
-                st.markdown(
-                    f"""
-                    <div class="avoidance-card-container">
-                        <h4 class="avoidance-header">⚠️ Hairstyles & Haircuts to Avoid for {detected_shape.upper()} Profiles ({gender_file.upper()})</h4>
-                    </div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                
-                for tip in avoidance_tips[tip_lookup]:
-                    st.write(f"- {tip}")
-                
-                if tip_lookup in specific_cuts_to_avoid:
-                    gender_data = specific_cuts_to_avoid[tip_lookup]
-                    if gender_file in gender_data:
-                        st.write(f"- {gender_data[gender_file]}")
-                            
-        else:
-            st.error(f"❌ Asset file missing inside folder structure! Searched for '{gender_file}' variations inside 'hairstyle_dataset/{shape_folder}/'")
+    else:
+        st.warning(f"⚠️ **Low Prediction Confidence ({confidence_score:.1f}%)**")
+        st.error("The AI is uncertain about your face shape due to lighting angles or background clutter. Please look straight forward under clear lighting and capture a new image profile.")
