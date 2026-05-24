@@ -6,7 +6,7 @@ from PIL import Image, ImageFile
 import os
 import mediapipe as mp
 
-# Set up page layout
+# Set up page layout using native Streamlit configuration
 st.set_page_config(page_title="HAIR WE GO!", page_icon="💇‍♂️", layout="centered")
 
 st.title("💇‍♂️ HAIR WE GO!")
@@ -32,7 +32,6 @@ else:
 
 # --- INITIALIZE MEDIAPIPE FACE DETECTION SOLUTIONS ---
 mp_face_detection = mp.solutions.face_detection
-# Initialize face detection model with a high-confidence threshold
 face_detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.6)
 
 # --- ROUTING STATE MACHINE MATRIX ---
@@ -43,17 +42,14 @@ if "gender" not in st.session_state:
 if "selectbox_index" not in st.session_state:
     st.session_state.selectbox_index = 0
 
+# INTERCEPT GATE: Native select box blocker card layout
 if not st.session_state.gender_selected:
     st.write("---")
-    st.markdown(
-        """
-        <div class="welcome-card-box">
-            <h3 style="margin-top:0; color:#3b82f6;">👋 Welcome to HAIR WE GO!</h3>
-            <p style="color:#94a3b8; font-size:15px;">Please select your styling category below to unlock the real-time camera face shape scanner and recommended filters dashboard.</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    
+    # Using simple, standard Streamlit cards and text
+    with st.container(border=True):
+        st.markdown("### 👋 Welcome to HAIR WE GO!")
+        st.write("Please select your styling category below to unlock the real-time camera face shape scanner and recommended filters dashboard.")
     
     category_choice = st.selectbox(
         "Select Your Gender Category:",
@@ -76,7 +72,7 @@ if not st.session_state.gender_selected:
             
     st.stop() 
 
-# --- MAIN DASHBOARD ---
+# --- MAIN DASHBOARD ENTERS HERE AFTER SELECTION ---
 st.sidebar.header("App Configurations")
 st.sidebar.write(f"Current Category: **{st.session_state.gender.capitalize()}**")
 
@@ -102,21 +98,7 @@ with st.expander("ℹ️ Tips for Perfect AI Face Scanning", expanded=True):
 
 captured_image = None
 if source_option == "Use Live Camera":
-    st.markdown(
-        """
-        <style>
-        div[data-testid="stCameraInput"] {
-            max-width: 480px !important;  
-            margin: 0 auto !important;     
-            aspect-ratio: 4 / 3 !important; 
-        }
-        div[data-testid="stCameraInput"] video {
-            object-fit: cover !important; 
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    # Display the regular web camera input window
     camera_input = st.camera_input("Position your face clearly in the center box boundary")
     if camera_input is not None:
         captured_image = Image.open(camera_input)
@@ -136,7 +118,6 @@ if captured_image is not None:
     # --- MODERN DEEP LEARNING HUMAN FACE VALIDATION LAYER VIA MEDIAPIPE ---
     results = face_detector.process(img_array)
     
-    # Check if MediaPipe successfully detected structural facial frames
     if not results.detections:
         st.warning("⚠️ **Invalid Image Content Detected**")
         st.error("No valid human face profile was found in this photo. Please make sure you are capturing a clear, front-facing portrait of a person and try again!")
@@ -146,7 +127,7 @@ if captured_image is not None:
         input_batch = np.expand_dims(resized_img, axis=0)
         
         predictions = model.predict(input_batch, verbose=0)
-        prob_distribution = predictions
+        prob_distribution = predictions 
         
         highest_score_index = np.argmax(prob_distribution)
         detected_shape = LABELS[highest_score_index]
@@ -182,6 +163,7 @@ if captured_image is not None:
                 st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
                 
                 st.write("---")
+                st.write("### ⚠️ Hairstyles & Haircuts to Avoid")
                 
                 avoidance_tips = {
                     'oval': [
@@ -229,29 +211,22 @@ if captured_image is not None:
                     }
                 }
                 
-                tip_lookup = 'oval' if shape_folder == 'oval' and detected_shape.lower().strip() == 'oblong' else shape_folder
+                       tip_lookup = 'oval' if shape_folder == 'oval' and detected_shape.lower().strip() == 'oblong' else shape_folder
+        
+        # Render the advice cards dynamically using standard native containers
+        if tip_lookup in avoidance_tips:
+            with st.container(border=True):
+                st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles ({gender_file.upper()}):")
+                for tip in avoidance_tips[tip_lookup]:
+                    st.write(f"- {tip}")
                 
-                if tip_lookup in avoidance_tips:
-                    st.markdown(
-                        f"""
-                        <div class="avoidance-card-container">
-                            <h4 class="avoidance-header">⚠️ Hairstyles & Haircuts to Avoid for {detected_shape.upper()} Profiles ({gender_file.upper()})</h4>
-                        </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
-                    
-                    for tip in avoidance_tips[tip_lookup]:
-                        st.write(f"- {tip}")
-                    
-                    if tip_lookup in specific_cuts_to_avoid:
-                        gender_data = specific_cuts_to_avoid[tip_lookup]
-                        if gender_file in gender_data:
-                            st.write(f"- {gender_data[gender_file]}")
-                                
-            else:
-                st.error("❌ Asset file missing inside folder structure! Please ensure your men.png or women.png cards are uploaded correctly to your hairstyle_dataset folders on GitHub.")
-                
+                if tip_lookup in specific_cuts_to_avoid:
+                    gender_data = specific_cuts_to_avoid[tip_lookup]
+                    if gender_file in gender_data:
+                        st.write(f"- {gender_data[gender_file]}")
         else:
-            st.warning(f"⚠️ **Low Prediction Confidence ({confidence_score:.1f}%)**")
-            st.error("The AI is uncertain about your face shape due to lighting angles or background clutter. Please look straight forward under clear lighting and capture a new image profile.")
+            st.error("❌ Asset file missing inside folder structure! Please ensure your men.png or women.png cards are uploaded correctly to your hairstyle_dataset folders on GitHub.")
+            
+else:
+    st.warning(f"⚠️ Low Prediction Confidence ({confidence_score:.1f}%)")
+    st.error("The AI is uncertain about your face shape due to lighting angles or background clutter. Please look straight forward under clear lighting and capture a new image profile.")
