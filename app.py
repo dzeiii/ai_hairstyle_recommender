@@ -46,11 +46,11 @@ if not st.session_state.gender_selected:
         # Display selection tool
         category_choice = st.selectbox(
             "Select Your Gender Category:",
-            ["-- Choose Options --", "Men's Hairstyles", "Women's Hairstyles"]
+            ["Choose Options", "Men", "Women"]
         )
         
         # Determine if the button should be disabled (True if placeholder is selected)
-        is_disabled = (category_choice == "-- Choose Options --")
+        is_disabled = (category_choice == "Choose Options")
         
         # The button dynamically locks/unlocks based on the 'is_disabled' variable status
         if st.button("Confirm", type="primary", disabled=is_disabled):
