@@ -113,20 +113,31 @@ if captured_image is not None:
     # Run prediction
     predictions = model.predict(input_batch, verbose=0)[0]  # <-- ADDED [0] HERE
     
+      # Calculate the prediction metrics
     highest_score_index = np.argmax(predictions)
     detected_shape = LABELS[highest_score_index]
     confidence_score = predictions[highest_score_index] * 100
     
-    st.success(f"🎉 **Analysis Complete!** We detected a **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
+    # Set a professional validation threshold (e.g., 55%)
+    CONFIDENCE_THRESHOLD = 55.0
+    
+    if confidence_score >= CONFIDENCE_THRESHOLD:
+        st.success(f"🎉 **Analysis Complete!** We detected a **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
+        
+        # Keep your existing image rendering and avoidance logic here...
+        shape_folder = str(detected_shape).lower().strip()
+        gender_file = str(st.session_state.gender).lower().strip()
+        
+        # [Insert your existing extension loop and image display code here]
+        
+    else:
+        # If the model is guessing blindly, prompt for a cleaner capture layout
+        st.warning(f"⚠️ **Low Prediction Confidence ({confidence_score:.1f}%)**")
+        st.error("The AI is uncertain about your face shape due to lighting, angle, or background clutter. Please adjust your positioning and retake the photo under clear, front-facing lighting!")
+
     
     st.write("---")
     st.write(f"### 📋 Step 3: Your Suggested {st.session_state.gender.capitalize()} Hairstyles")
-
-    
-    # Format strings strictly to strip out invisible break flags
-    shape_folder = str(detected_shape).lower().strip()
-    gender_file = str(st.session_state.gender).lower().strip()
-
     
     # List all common extensions to check sequentially
     possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
