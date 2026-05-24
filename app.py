@@ -120,7 +120,7 @@ if captured_image is not None:
     confidence_score = predictions[highest_score_index] * 100
     
     # Define a strict certainty floor for your capstone presentation defense
-    CONFIDENCE_THRESHOLD = 50.0
+    CONFIDENCE_THRESHOLD = 40.0
     
     if confidence_score >= CONFIDENCE_THRESHOLD:
         st.success(f"🎉 **Analysis Complete!** We detected a **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
