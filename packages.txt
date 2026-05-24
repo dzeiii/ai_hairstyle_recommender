@@ -1,1 +1,1 @@
-libglut3.12
+libglib2.0-0
