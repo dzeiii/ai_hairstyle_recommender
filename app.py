@@ -29,44 +29,42 @@ else:
     st.error("Model file 'face_shape_model.h5' not found in your folder!")
     st.stop()
 
-# --- NEW OVERLAY MODAL LOGIC ---
-# Initialize session state variables if they do not exist
+# --- NATIVE LOCKING LAYOUT MATRIX LOGIC ---
+# Initialize session state tracking parameters
 if "gender_selected" not in st.session_state:
     st.session_state.gender_selected = False
 if "gender" not in st.session_state:
     st.session_state.gender = "men"
 
-# Define the pop-up modal function
-@st.dialog("Welcome to HAIR WE GO! 👋", clear_on_submit=False)
-def gender_selection_modal():
-    st.write("Please select your gender category to customize your 3x3 hairstyle recommendations:")
-    
-    # Store choice in a temporary variable
-    choice = st.radio(
-        "Choose Category:", 
-        ("Men's Hairstyles", "Women's Hairstyles"),
-        index=0 if st.session_state.gender == "men" else 1
-    )
-    
-    if st.button("Confirm & Enter App", type="primary"):
-        # Map choice to exact folder keys
-        st.session_state.gender = "men" if choice == "Men's Hairstyles" else "women"
-        st.session_state.gender_selected = True
-        st.rerun()
-
-# Trigger the pop-up automatically if the user hasn't made a choice yet
+# If the category hasn't been set, intercept the render stack with a stylized selection card
 if not st.session_state.gender_selected:
-    gender_selection_modal()
-    st.info("⚠️ Please select your category in the pop-up window to unlock the app features.")
-    st.stop()  # Completely stops rendering the rest of the app until they confirm
+    st.write("---")
+    with st.container():
+        st.markdown("### 👋 Welcome to HAIR WE GO!")
+        st.info("Please complete the setup step below to unlock the camera scanner and hairstyle filters.")
+        
+        # Display selection tool
+        category_choice = st.selectbox(
+            "Select Your Gender Category:",
+            ["-- Choose Options --", "Men's Hairstyles", "Women's Hairstyles"]
+        )
+        
+        if category_choice != "-- Choose Options --":
+            if st.button("Confirm Selection & Enter Dashboard", type="primary"):
+                # Map choice directly to folder structures
+                st.session_state.gender = "men" if category_choice == "Men's Hairstyles" else "women"
+                st.session_state.gender_selected = True
+                st.rerun()
+                
+    st.stop() # Stops execution here so nothing else shows up until selection is made
 
-# --- MAIN APP ENTERS HERE AFTER CONFIRMATION ---
-# Show a small reset option in the sidebar in case they want to switch genders later
+# --- DASHBOARD RE-ENTERS HERE ONCE CONFIRMED ---
 st.sidebar.header("App Configurations")
 st.sidebar.write(f"Current Category: **{st.session_state.gender.capitalize()}**")
 if st.sidebar.button("Switch Gender Category"):
     st.session_state.gender_selected = False
     st.rerun()
+    
 st.write("---")
 st.write("### 📸 Step 1: Capture or Upload Your Face Image")
 source_option = st.radio("Choose Input Method:", ("Use Live Camera", "Upload Image File"))
