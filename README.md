@@ -1,1 +1,1 @@
-# ai_hairstyle_recommender
+# hair_we_go
