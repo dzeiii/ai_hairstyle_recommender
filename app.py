@@ -211,7 +211,7 @@ if captured_image is not None:
                     }
                 }
                 
-                       tip_lookup = 'oval' if shape_folder == 'oval' and detected_shape.lower().strip() == 'oblong' else shape_folder
+               tip_lookup = 'oval' if shape_folder == 'oval' and detected_shape.lower().strip() == 'oblong' else shape_folder
         
         # Render the advice cards dynamically using standard native containers
         if tip_lookup in avoidance_tips:
