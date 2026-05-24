@@ -105,49 +105,64 @@ if captured_image is not None:
     st.write("### 🧠 Step 2: Processing AI Classification...")
     st.image(captured_image, width=250, caption="Analyzed Face Profile")
     
-    # Process for MobileNetV2
+    # Convert picture array data cleanly
     img_array = np.array(captured_image.convert('RGB'))
-    resized_img = cv2.resize(img_array, (224, 224)) / 255.0
-    input_batch = np.expand_dims(resized_img, axis=0)
     
-    predictions = model.predict(input_batch, verbose=0)
-    prob_distribution = predictions[0]
-    highest_score_index = np.argmax(prob_distribution)
-    detected_shape = LABELS[highest_score_index]
+    # --- NEW FEATURE: HUMAN FACE STRUCTURAL VALIDATION LAYER ---
+    # Load OpenCV's built-in face detector tool
+    gray_img = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     
-    confidence_score = float(prob_distribution[highest_score_index] * 100)
+    # Scan the matrix array for structural features matching a human face outline
+    detected_faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
     
-    # Custom safety parameter threshold bypass option
-    CONFIDENCE_THRESHOLD = 40.0
-    
-    if confidence_score >= CONFIDENCE_THRESHOLD:
-        st.success(f"🎉 **Analysis Complete!** We detected a **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
-        st.write("---")
-        st.write(f"### 📋 Step 3: Your Suggested {st.session_state.gender.capitalize()} Hairstyles")
+    # If NO human face structures are found on the camera layer canvas boundary box:
+    if len(detected_faces) == 0:
+        st.warning("⚠️ **Invalid Image Content Detected**")
+        st.error("No valid human face profile was found in this photo. Please make sure you are capturing a clear, front-facing portrait of a person and try again!")
+    else:
+        # --- PROCEED WITH AI PREDICTION ONLY IF A REAL FACE IS CONFIRMED ---
+        resized_img = cv2.resize(img_array, (224, 224)) / 255.0
+        input_batch = np.expand_dims(resized_img, axis=0)
         
-        if detected_shape.lower().strip() == "oblong":
-            shape_folder = "oblong"
-            display_title = "OBLONG"
-        else:
-            shape_folder = str(detected_shape).lower().strip()
-            display_title = detected_shape.upper()
-            
-        gender_file = str(st.session_state.gender).lower().strip()
+        # Run prediction weights
+        predictions = model.predict(input_batch, verbose=0)
+        prob_distribution = predictions[0]
         
-        possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
-        recommendation_path = None
+        highest_score_index = np.argmax(prob_distribution)
+        detected_shape = LABELS[highest_score_index]
+        confidence_score = float(prob_distribution[highest_score_index] * 100)
         
-        for ext in possible_extensions:
-            test_path = os.path.join(ASSET_DIR, f"{shape_folder}/{gender_file}{ext}")
-            if os.path.exists(test_path):
-                recommendation_path = test_path
-                break
-
-        if recommendation_path is not None:
-            recommendation_graphic = Image.open(recommendation_path)
-            st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
-            
+        CONFIDENCE_THRESHOLD = 40.0
+        
+        if confidence_score >= CONFIDENCE_THRESHOLD:
+            st.success(f"🎉 **Analysis Complete!** We detected an **{detected_shape.upper()}** face shape ({confidence_score:.1f}%)")
             st.write("---")
+            st.write(f"### 📋 Step 3: Your Suggested {st.session_state.gender.capitalize()} Hairstyles")
+            
+            if detected_shape.lower().strip() == "oblong":
+                shape_folder = "oval"
+                display_title = "OVAL/OBLONG"
+            else:
+                shape_folder = str(detected_shape).lower().strip()
+                display_title = detected_shape.upper()
+                
+            gender_file = str(st.session_state.gender).lower().strip()
+            
+            possible_extensions = ['.png', '.PNG', '.jpg', '.jpeg', '.JPG', '.JPEG']
+            recommendation_path = None
+            
+            for ext in possible_extensions:
+                test_path = os.path.join(ASSET_DIR, f"{shape_folder}/{gender_file}{ext}")
+                if os.path.exists(test_path):
+                    recommendation_path = test_path
+                    break
+
+            if recommendation_path is not None:
+                recommendation_graphic = Image.open(recommendation_path)
+                st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
+                
+                st.write("---")
             avoidance_tips = {
                 'oval': [
                     "**Avoid heavy, long straight blunt bangs** that cut straight across your face, as they block your features and make a naturally balanced oval head shape look shorter.",
