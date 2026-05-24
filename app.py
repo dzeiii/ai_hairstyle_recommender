@@ -35,7 +35,7 @@ else:
 
 # --- INITIALIZE MEDIAPIPE FACE DETECTION SOLUTIONS ---
 mp_face_detection = mp.solutions.face_detection
-face_detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.6)
+face_detector = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.85)
 
 # --- ROUTING STATE MACHINE MATRIX ---
 if "gender_selected" not in st.session_state:
