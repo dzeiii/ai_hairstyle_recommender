@@ -231,8 +231,12 @@ if captured_image is not None:
                                 st.write(f"- {gender_data[gender_file]}")
             else:
                 st.error("❌ Asset file missing inside folder structure! Please ensure your men.png or women.png cards are uploaded correctly to your hairstyle_dataset folders on GitHub.")
+                
         else:
-            # Low confidence alert trigger block runs safely if face is real but obscure
-            st.warning(f"⚠️ **Low Prediction Confidence ({confidence_score:.1f}%)**")
-            st.error("The AI is uncertain about your face shape due to lighting angles or background clutter. Please look straight forward under clear lighting and capture a new image profile.")
+            # --- DUAL-VERIFICATION PASS: CARTOON & CLUTTER INTERCEPT BANNER ---
+            st.warning("⚠️ **Invalid Image Content Detected**")
+            st.error(
+                f"The system detected non-human features or extreme background clutter (Confidence: {confidence_score:.1f}%). "
+                "Please make sure you are capturing a clear, front-facing portrait of an actual person under clear lighting!"
+            )
 
