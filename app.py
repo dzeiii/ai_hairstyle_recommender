@@ -55,10 +55,10 @@ if not st.session_state.gender_selected:
         # The button dynamically locks/unlocks based on the 'is_disabled' variable status
         if st.button("Confirm", type="primary", disabled=is_disabled):
         # 1. FORCE the session state to update immediately upon clicking
-        if category_choice == "Men's Hairstyles":
-            st.session_state.gender = "men"
-        else:
-            st.session_state.gender = "women"
+            if category_choice == "Men":
+                st.session_state.gender = "men"
+            else:
+                st.session_state.gender = "women"
             
         # 2. Confirm selection status and clear the blocking loop
         st.session_state.gender_selected = True
