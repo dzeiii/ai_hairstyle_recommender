@@ -192,3 +192,28 @@ if captured_image is not None:
                 },
                 'square': {
                     'men': "**❌ SPECIFIC HAIRCUTS TO AVOID:** Geometric flat tops, severe slicked-back buzz cuts with hard lines, or wide square block-fades.",
+                    'women': "❌ SPECIFIC HAIRCUTS TO AVOID: Sharp blunt flapper bobs, severe slicked-back buns, or straight-across heavy blunt fringes."
+                }
+            }
+tip_lookup = 'oval' if shape_folder == 'oval' and detected_shape.lower().strip() == 'oblong' else shape_folder
+if tip_lookup in avoidance_tips:
+st.markdown(
+f"""
+
+⚠️ Hairstyles & Haircuts to Avoid for {detected_shape.upper()} Profiles ({gender_file.upper()})
+
+""",
+unsafe_allow_html=True
+)
+for tip in avoidance_tips[tip_lookup]:
+st.write(f"- {tip}")
+if tip_lookup in specific_cuts_to_avoid:
+gender_data = specific_cuts_to_avoid[tip_lookup]
+if gender_file in gender_data:
+st.write(f"- {gender_data[gender_file]}")
+else:
+st.error(f"❌ Asset file missing inside folder structure! Searched for '{gender_file}' variations inside 'hairstyle_dataset/{shape_folder}/'")
+else:
+st.warning(f"⚠️ Low Prediction Confidence ({confidence_score:.1f}%)")
+st.error("The AI is uncertain about your face shape due to lighting angles or background clutter. Please look straight forward under clear lighting and capture a new image profile.")
+
