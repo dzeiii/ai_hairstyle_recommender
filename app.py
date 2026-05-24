@@ -162,7 +162,7 @@ if captured_image is not None:
                 recommendation_graphic = Image.open(recommendation_path)
                 st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
                 
-                         if recommendation_path is not None:
+            if recommendation_path is not None:
                 recommendation_graphic = Image.open(recommendation_path)
                 st.image(recommendation_graphic, use_container_width=True, caption=f"Best styles for {display_title} faces")
                 
