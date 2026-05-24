@@ -116,28 +116,42 @@ if captured_image is not None:
     st.write("### 🧠 Step 2: Processing AI Classification")
     st.image(captured_image, width=250, caption="Analyzed Face Profile")
     
-    img_array = np.array(captured_image.convert('RGB'))
-    
-    # Ensure image is in standard RGB channel format for MediaPipe tracking
+     # Ensure image is in standard RGB channel format for MediaPipe tracking
     rgb_img = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
     results = face_detector.process(rgb_img)
     
-    # 🚨 TEST FOR HUMAN VALIDATION RIGHT AWAY 🚨
+    # 🚨 STRICT HUMAN STRUCTURAL VERIFICATION LAYER PASS 🚨
     if results.detections is None or len(results.detections) == 0:
         st.warning("⚠️ **Invalid Image Content Detected**")
-        st.error("No valid human face profile was found in this photo. Please make sure you are capturing a clean, front-facing portrait of a person without background text, overlays, or icons, and try again!")
+        st.error("No valid human face profile was found in this photo. Please make sure you are capturing a clear, front-facing portrait of an actual person and try again!")
     else:
-        # --- PROCEED WITH AI PREDICTION ONLY IF A REAL FACE IS CONFIRMED ---
-        resized_img = cv2.resize(img_array, (224, 224)) / 255.0
-        input_batch = np.expand_dims(resized_img, axis=0)
+        # --- NEW ANIMAL FILTER: aspect ratio validation check ---
+        # Grab the dimensions of the first detected face box boundary
+        detection = results.detections[0]
+        bbox = detection.location_data.relative_bounding_box
         
-        predictions = model.predict(input_batch, verbose=0)
-        prob_distribution = predictions[0] 
+        # Calculate aspect ratio (width divided by height)
+        box_width = bbox.width
+        box_height = bbox.height
+        face_ratio = box_width / box_height if box_height > 0 else 0
         
-        highest_score_index = np.argmax(prob_distribution)
-        detected_shape = LABELS[highest_score_index]
-        confidence_score = float(prob_distribution[highest_score_index] * 100)
-        
+        # Human faces are vertical ovals. If wide (animal muzzle) or overly distorted:
+        # Standard human threshold falls strictly between 0.55 and 0.90
+        if face_ratio < 0.55 or face_ratio > 0.90:
+            st.warning("⚠️ **Invalid Image Content Detected**")
+            st.error("The system detected non-human geometric proportions (Animal/Object layout). Please make sure you upload a front-facing human portrait!")
+        else:            
+            # --- PROCEED WITH AI PREDICTION ONLY IF A REAL FACE IS CONFIRMED ---
+            resized_img = cv2.resize(img_array, (224, 224)) / 255.0
+            input_batch = np.expand_dims(resized_img, axis=0)
+            
+            predictions = model.predict(input_batch, verbose=0)
+            prob_distribution = predictions[0] 
+            
+            highest_score_index = np.argmax(prob_distribution)
+            detected_shape = LABELS[highest_score_index]
+            confidence_score = float(prob_distribution[highest_score_index] * 100)
+            
         # Professional certainty threshold floor
         CONFIDENCE_THRESHOLD = 40.0
         
