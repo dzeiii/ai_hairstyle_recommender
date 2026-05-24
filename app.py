@@ -8,15 +8,6 @@ import os
 # Set up page layout
 st.set_page_config(page_title="HAIR WE GO!", page_icon="💇‍♂️", layout="centered")
 
-# --- SEPARATE CSS SHEET LOADER INJECT ---
-def local_css(file_name):
-    if os.path.exists(file_name):
-        with open(file_name, "r") as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-# Run the loader to pull in your separate style sheet styles instantly
-local_css("static/style.css")
-
 st.title("💇‍♂️ HAIR WE GO!")
 st.subheader("AI Hairstyle Recommendation Dashboard")
 
