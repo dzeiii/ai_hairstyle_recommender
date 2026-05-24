@@ -55,17 +55,17 @@ if not st.session_state.gender_selected:
     # Load selection tool tracking choice dynamically via session index parameters
     category_choice = st.selectbox(
         "Select Your Gender Category:",
-        ["-- Choose Options --", "Men's Hairstyles", "Women's Hairstyles"],
+        ["Choose Options", "Men", "Women"],
         index=st.session_state.selectbox_index
     )
     
-    is_disabled = (category_choice == "-- Choose Options --")
+    is_disabled = (category_choice == "Choose Options")
     
-    if st.button("Confirm Selection & Enter Dashboard", type="primary", disabled=is_disabled):
-        if category_choice == "Men's Hairstyles":
+    if st.button("Confirm", type="primary", disabled=is_disabled):
+        if category_choice == "Men":
             st.session_state.gender = "men"
             st.session_state.selectbox_index = 1
-        elif category_choice == "Women's Hairstyles":
+        elif category_choice == "Women":
             st.session_state.gender = "women"
             st.session_state.selectbox_index = 2
             
