@@ -213,19 +213,19 @@ if captured_image is not None:
                 
                 tip_lookup = 'oval' if shape_folder == 'oval' and detected_shape.lower().strip() == 'oblong' else shape_folder
         
-                    # Render the advice cards dynamically using standard native containers
-                    if tip_lookup in avoidance_tips:
-                        with st.container(border=True):
-                            st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles ({gender_file.upper()}):")
-                            for tip in avoidance_tips[tip_lookup]:
-                                st.write(f"- {tip}")
+                # Render the advice cards dynamically using standard native containers
+                if tip_lookup in avoidance_tips:
+                    with st.container(border=True):
+                        st.markdown(f"#### 🚫 Styling Red Flags for {detected_shape.upper()} Profiles ({gender_file.upper()}):")
+                        for tip in avoidance_tips[tip_lookup]:
+                            st.write(f"- {tip}")
                             
-                            if tip_lookup in specific_cuts_to_avoid:
-                                gender_data = specific_cuts_to_avoid[tip_lookup]
-                                if gender_file in gender_data:
-                                    st.write(f"- {gender_data[gender_file]}")
-                    else:
-                        st.error("❌ Asset file missing inside folder structure! Please ensure your men.png or women.png cards are uploaded correctly to your hairstyle_dataset folders on GitHub.")
+                        if tip_lookup in specific_cuts_to_avoid:
+                            gender_data = specific_cuts_to_avoid[tip_lookup]
+                            if gender_file in gender_data:
+                                st.write(f"- {gender_data[gender_file]}")
+                else:
+                    st.error("❌ Asset file missing inside folder structure! Please ensure your men.png or women.png cards are uploaded correctly to your hairstyle_dataset folders on GitHub.")
                         
             else:
                 st.warning(f"⚠️ Low Prediction Confidence ({confidence_score:.1f}%)")
